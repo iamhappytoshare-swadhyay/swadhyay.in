@@ -338,10 +338,12 @@ export default function QuizManager() {
   function handleStartEditQuestion(index) {
     const q = tempQuestionsList[index]
     setEditingIndex(index)
+    const validIdx = typeof q.correctOptionIndex === 'number' ? q.correctOptionIndex : 0
     setEditDraft({
       question: q.question,
       options: [...q.options],
-      correctOptionIndex: q.correctOptionIndex,
+      correctOptionIndex: validIdx,
+      correctAnswerIndex: validIdx,
       explanation: q.explanation || '',
     })
   }
@@ -349,12 +351,13 @@ export default function QuizManager() {
   function handleSaveEditedQuestion() {
     if (editingIndex === null || !editDraft) return
     const cleanOptions = editDraft.options.map((o) => String(o || '').trim())
-    const idx = Math.min(Math.max(0, Number(editDraft.correctOptionIndex || 0)), cleanOptions.length - 1)
+    const rawIdx = editDraft.correctOptionIndex ?? editDraft.correctAnswerIndex ?? 0
+    const idx = Math.min(Math.max(0, Number(rawIdx)), cleanOptions.length - 1)
     const updated = {
       question: String(editDraft.question || '').trim(),
       options: cleanOptions,
       correctOptionIndex: idx,
-      explanation: String(editDraft.explanation || '').trim() || 'Explanation not available.',
+      explanation: String(editDraft.explanation || '').trim() || 'व्याख्या उपलब्ध नहीं है।',
     }
     const nextList = tempQuestionsList.map((item, i) => (i === editingIndex ? updated : item))
     setTempQuestionsList(nextList)
@@ -651,10 +654,9 @@ export default function QuizManager() {
           </div>
 
           <div className="qz-format-guide">
-            <strong>Supported Bulk Format (English &amp; Hindi):</strong>
+            <strong>बल्क प्रश्न फॉर्मेट (मानक हिंदी व अंग्रेजी):</strong>
             <span>
-              Q1. / प्रश्न 1: / प्र 1: · Options: A) B) C) D) or A. B. C. D. or 1. 2. 3. 4. ·
-              Answer: Correct Answer: / सही उत्तर: / सही: · Explanation: व्याख्या: / स्पष्टीकरण: / Explanation:
+              <strong>प्रश्न प्रारंभ:</strong> 'प्रश्न' (उदा. प्रश्न 1: ...) · <strong>विकल्प:</strong> (a), (b), (c), (d) (एक या अलग-अलग लाइन पर) · <strong>उत्तर:</strong> उत्तर: (a) · <strong>व्याख्या:</strong> व्याख्या: ...
             </span>
           </div>
 
@@ -662,7 +664,7 @@ export default function QuizManager() {
             id="bulk-questions-text"
             className="qz-bulk-textarea"
             rows={12}
-            placeholder="Paste all your questions here..."
+            placeholder={`उदाहरण फॉर्मेट:\n\nप्रश्न 1: हड़प्पा सभ्यता की खोज किस वर्ष हुई थी?\n(a) 1921\n(b) 1922\n(c) 1935\n(d) 1942\nउत्तर: (a)\nव्याख्या: हड़प्पा सभ्यता की खोज 1921 में दयाराम साहनी द्वारा की गई थी।\n\nप्रश्न 2: मोहनजोदड़ो किस नदी के किनारे स्थित है?\n(a) रावी (b) सिन्धु\n(c) भोगवा (d) घग्घर\nउत्तर: (b)\nव्याख्या: मोहनजोदड़ो सिन्धु नदी के दाएँ तट पर स्थित है।`}
             value={bulkText}
             onChange={(e) => setBulkText(e.target.value)}
           />
@@ -747,9 +749,15 @@ export default function QuizManager() {
                               <input
                                 type="radio"
                                 name={`edit-correct-${idx}`}
-                                checked={editDraft.correctAnswerIndex === optIdx}
+                                checked={
+                                  (editDraft.correctOptionIndex ?? editDraft.correctAnswerIndex) === optIdx
+                                }
                                 onChange={() =>
-                                  setEditDraft((d) => ({ ...d, correctAnswerIndex: optIdx }))
+                                  setEditDraft((d) => ({
+                                    ...d,
+                                    correctOptionIndex: optIdx,
+                                    correctAnswerIndex: optIdx,
+                                  }))
                                 }
                               />{' '}
                               Correct
