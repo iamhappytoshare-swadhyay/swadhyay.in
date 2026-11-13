@@ -1,20 +1,27 @@
 /**
  * Advanced Multi-Choice Bulk Quiz Parser
  *
- * Designed specifically for Indian competitive exam question formats:
+ * Rules:
  * 1. Question Start: Begins with 'प्रश्न' (e.g. 'प्रश्न 1:', 'प्रश्न 1.', 'प्रश्न 1-', 'प्रश्न:', 'प्रश्न')
- * 2. Options: Begin with '(a)', '(b)', '(c)', '(d)' (or '(A)', '(B)', '(अ)', '(ब)', '(स)', '(द)', etc.)
+ *    All lines before option (a) belong to the question (multi-line statements, lists, tables).
+ * 2. Capital Letters: Capital letters (A., B., C., D. / A-iii, B-iv) are parts of question lists/statements, NOT options!
+ * 3. Options: Start ONLY with lowercase letters: '(a)', '(b)', '(c)', '(d)' (or 'a)', 'b)')
+ *    or Hindi bracket options: '(अ)', '(ब)', '(स)', '(द)' / '(क)', '(ख)', '(ग)', '(घ)'.
  *    Supports multiple options on single line: e.g. '(a) ... (b) ...'
- * 3. Correct Option: Preceded by 'उत्तर' (e.g. 'उत्तर: (a)', 'उत्तर - (b)', 'उत्तर: a', 'उत्तर: लोथल')
- * 4. Explanation: Preceded by 'व्याख्या' (e.g. 'व्याख्या:', 'व्याख्या -', with full multi-line explanation support)
+ * 4. Correct Option: Preceded by 'उत्तर' (e.g. 'उत्तर: (a)', 'उत्तर - (b)', 'उत्तर: a', 'उत्तर: [option text]')
+ * 5. Explanation: Preceded by 'व्याख्या' (e.g. 'व्याख्या:', 'व्याख्या -', with full multi-line explanation support)
  */
 
-const OPTION_TOKEN_RE = /(?:^|\s+)((?:\((?:[a-eA-E1-5\u0905-\u0939]|i{1,3}|iv|v)\)|[a-eA-E1-5][).]))\s*/gi
+// Matches ONLY lowercase (a), (b), (c), (d), (e) or a), b), c), d), e)
+// Or Hindi bracketed options: (अ), (ब), (स), (द), (क), (ख), (ग), (घ)
+// Capital letters (A., B., C., D.) are deliberately EXCLUDED as they belong to question lists/statements!
+const OPTION_TOKEN_RE = /(?:^|\s+)((?:\([a-e\u0905-\u0939]\)|[a-e][)]))\s*/g
 
 export function extractOptionsFromLine(line) {
   const matches = [...line.matchAll(OPTION_TOKEN_RE)]
   if (matches.length === 0) return null
-  if (matches[0].index > 8) return null
+  // Make sure first option token appears at or near the beginning of the line
+  if (matches[0].index > 6) return null
 
   const results = []
   for (let i = 0; i < matches.length; i++) {
@@ -108,7 +115,7 @@ export function resolveCorrectOption(answerStr, options) {
   const exactIdx = options.findIndex((opt) => opt.toLowerCase() === lowerClean)
   if (exactIdx !== -1) return exactIdx
 
-  // 8. Containment match (e.g. if option is "1921 ई." and answer is "1921")
+  // 8. Containment match (e.g. if option is "A-iii, B-iv..." and answer is "A-iii, B-iv...")
   const containsIdx = options.findIndex((opt) => {
     const oLower = opt.toLowerCase()
     return oLower.includes(lowerClean) || lowerClean.includes(oLower)
@@ -197,6 +204,7 @@ export function parseBulkQuestionsText(rawText) {
     }
 
     // 4. Is this an Option line (or contains options)?
+    // Only lowercase (a), (b), (c), (d) or (अ), (ब)... are parsed as options!
     if (state === 'QUESTION' || state === 'OPTIONS') {
       const extractedOpts = extractOptionsFromLine(line)
       if (extractedOpts && extractedOpts.length > 0) {

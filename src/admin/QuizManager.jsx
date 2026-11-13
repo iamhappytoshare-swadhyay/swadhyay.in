@@ -705,10 +705,14 @@ export default function QuizManager() {
               tempQuestionsList.map((q, idx) => (
                 <article key={idx} className="qz-preview-item">
                   <div className="qz-preview-head">
-                    <strong>
-                      Q{idx + 1}: {q.question} | Correct:{' '}
-                      {q.options[q.correctOptionIndex] || '—'}
-                    </strong>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ display: 'block', whiteSpace: 'pre-line', lineHeight: 1.5, fontSize: '0.96rem' }}>
+                        Q{idx + 1}: {q.question}
+                      </strong>
+                      <span style={{ display: 'inline-block', marginTop: 4, color: '#16a34a', fontSize: '0.86rem', fontWeight: 700 }}>
+                        ✓ Correct: ({String.fromCharCode(97 + (q.correctOptionIndex ?? 0))}) {q.options[q.correctOptionIndex] || '—'}
+                      </span>
+                    </div>
                     <div className="cms-row-actions">
                       <button
                         type="button"
@@ -732,9 +736,10 @@ export default function QuizManager() {
                   {editingIndex === idx && editDraft ? (
                     <div className="qz-inline-edit">
                       <div className="cms-field">
-                        <label>Question</label>
-                        <input
-                          type="text"
+                        <label>Question (Multi-line supported)</label>
+                        <textarea
+                          rows={5}
+                          style={{ width: '100%', fontFamily: 'inherit', padding: 8, borderRadius: 6, border: '1px solid var(--border)', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}
                           value={editDraft.question}
                           onChange={(e) =>
                             setEditDraft((d) => ({ ...d, question: e.target.value }))
@@ -745,7 +750,7 @@ export default function QuizManager() {
                         {editDraft.options.map((opt, optIdx) => (
                           <div key={optIdx} className="cms-field">
                             <label>
-                              Option {optIdx + 1}{' '}
+                              Option {optIdx + 1} ({String.fromCharCode(97 + optIdx)}){' '}
                               <input
                                 type="radio"
                                 name={`edit-correct-${idx}`}
@@ -778,8 +783,9 @@ export default function QuizManager() {
                       </div>
                       <div className="cms-field">
                         <label>Explanation</label>
-                        <input
-                          type="text"
+                        <textarea
+                          rows={3}
+                          style={{ width: '100%', fontFamily: 'inherit', padding: 8, borderRadius: 6, border: '1px solid var(--border)', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}
                           value={editDraft.explanation}
                           onChange={(e) =>
                             setEditDraft((d) => ({ ...d, explanation: e.target.value }))
