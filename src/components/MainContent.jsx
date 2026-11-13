@@ -64,16 +64,14 @@ function PostCardsGrid({ posts, onOpenPath }) {
   )
 }
 
-const QUIZ_BTN_PALETTE = [
-  '#dc2626', // Red (cards 0, 1)
-  '#ea580c', // Orange (cards 2, 3)
-  '#d97706', // Gold / Yellow (cards 4, 5)
-  '#16a34a', // Green (cards 6, 7)
-  '#2563eb', // Blue (cards 8, 9)
-  '#4f46e5', // Indigo (cards 10, 11)
-  '#7c3aed', // Purple
-  '#0d9488', // Teal
-  '#db2777', // Pink
+const RAINBOW_COLORS = [
+  { bg: '#dc2626', text: '#ffffff', accent: '#dc2626' }, // 1. लाल
+  { bg: '#ea580c', text: '#ffffff', accent: '#ea580c' }, // 2. नारंगी
+  { bg: '#eab308', text: '#1e1b4b', accent: '#ca8a04' }, // 3. पीला (dark text for contrast)
+  { bg: '#16a34a', text: '#ffffff', accent: '#16a34a' }, // 4. हरा
+  { bg: '#2563eb', text: '#ffffff', accent: '#2563eb' }, // 5. नीला
+  { bg: '#4f46e5', text: '#ffffff', accent: '#4f46e5' }, // 6. जामुनी
+  { bg: '#7c3aed', text: '#ffffff', accent: '#7c3aed' }, // 7. बैंगनी
 ]
 
 function QuizCardsGrid({ quizzes, onStartQuiz }) {
@@ -81,7 +79,8 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
   return (
     <div className="quiz-cards-grid-2col">
       {quizzes.map((quiz, idx) => {
-        const btnColor = QUIZ_BTN_PALETTE[Math.floor(idx / 2) % QUIZ_BTN_PALETTE.length]
+        const rowIndex = Math.floor(idx / 2)
+        const color = RAINBOW_COLORS[rowIndex % RAINBOW_COLORS.length]
         const questionCount =
           quiz.totalQuestions ||
           quiz.questionsCount ||
@@ -94,34 +93,38 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
             key={quiz.id}
             style={{
               background: 'var(--card-bg, #ffffff)',
-              borderRadius: 18,
+              borderRadius: 14,
               border: '1px solid var(--border, #e2e8f0)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-              padding: '16px 18px',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+              padding: '10px 10px 10px 10px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
+              minWidth: 0,
+              overflow: 'hidden',
               transition: 'transform 0.15s ease, box-shadow 0.15s ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.08)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'none'
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.04)'
             }}
           >
             {/* Card Title */}
             <div
               style={{
-                fontSize: '1.12rem',
+                fontSize: '0.94rem',
                 fontWeight: 700,
                 color: '#1e1b4b',
-                lineHeight: 1.32,
-                marginBottom: 16,
+                lineHeight: 1.25,
+                minHeight: '2.4em',
+                marginBottom: 8,
                 wordBreak: 'break-word',
               }}
+              title={quiz.title}
             >
               {quiz.title}
             </div>
@@ -132,8 +135,9 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 10,
+                gap: 6,
                 marginTop: 'auto',
+                minWidth: 0,
               }}
             >
               {/* Start Quiz Button */}
@@ -141,25 +145,23 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
                 type="button"
                 onClick={() => onStartQuiz(quiz)}
                 style={{
-                  background: btnColor,
-                  color: '#ffffff',
+                  background: color.bg,
+                  color: color.text,
                   border: 'none',
-                  borderRadius: 10,
-                  padding: '8px 14px',
-                  fontSize: '0.86rem',
+                  borderRadius: 8,
+                  padding: '6px 8px',
+                  fontSize: '0.78rem',
                   fontWeight: 700,
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 4,
                   cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.12)',
-                  transition: 'opacity 0.15s ease',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.12)',
+                  whiteSpace: 'nowrap',
                   flexShrink: 0,
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.92')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="#ffffff">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
                 <span>Start Quiz</span>
@@ -170,26 +172,28 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 4,
-                  fontSize: '0.84rem',
+                  gap: 2,
+                  fontSize: '0.74rem',
                   fontWeight: 600,
                   color: '#1e293b',
                   textAlign: 'right',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 {/* Question count */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3 }}>
                   <span
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 17,
-                      height: 17,
-                      borderRadius: 4,
-                      border: '1.5px solid #dc2626',
-                      color: '#dc2626',
-                      fontSize: '0.72rem',
+                      width: 14,
+                      height: 14,
+                      borderRadius: 3,
+                      border: `1.5px solid ${color.accent}`,
+                      color: color.accent,
+                      fontSize: '0.64rem',
                       fontWeight: 800,
                       lineHeight: 1,
                     }}
@@ -200,9 +204,9 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
                 </div>
 
                 {/* Duration */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
-                  <span style={{ color: '#dc2626', display: 'inline-flex', alignItems: 'center' }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3 }}>
+                  <span style={{ color: color.accent, display: 'inline-flex', alignItems: 'center' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="13" r="8" />
                       <path d="M12 9v4l2 2" />
                       <path d="M10 2h4" />
@@ -764,10 +768,10 @@ function SectionPage({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 12,
-            marginBottom: 20,
+            gap: 8,
+            marginBottom: 14,
             overflowX: 'auto',
-            padding: '4px 2px 8px',
+            padding: '2px 0 6px',
             WebkitOverflowScrolling: 'touch',
           }}
         >
@@ -784,16 +788,16 @@ function SectionPage({
                 onClick={() => setSelectedQuizCategory(chip.id)}
                 aria-pressed={active}
                 style={{
-                  padding: '9px 24px',
-                  borderRadius: 12,
+                  padding: '7px 18px',
+                  borderRadius: 10,
                   border: active ? '1.5px solid #c4b5fd' : '1.5px solid #cbd5e1',
                   background: active ? '#ede9fe' : 'var(--card-bg, #ffffff)',
                   color: active ? '#4338ca' : 'var(--text-primary, #1e293b)',
                   fontWeight: active ? 700 : 600,
-                  fontSize: '0.96rem',
+                  fontSize: '0.9rem',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  boxShadow: active ? '0 2px 6px rgba(99, 102, 241, 0.15)' : 'none',
+                  boxShadow: active ? '0 1px 4px rgba(99, 102, 241, 0.15)' : 'none',
                   transition: 'all 0.15s ease',
                   userSelect: 'none',
                 }}
