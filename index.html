@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swadhyay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@600;700&family=Noto+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      try {
+        var theme = localStorage.getItem('swadhyay-theme')
+        if (theme === 'dark' || theme === 'light') {
+          document.documentElement.dataset.theme = theme
+        }
+        var lang = localStorage.getItem('swadhyay-lang')
+        if (lang === 'hi' || lang === 'en') document.documentElement.lang = lang
+      } catch (e) {}
+    </script>
+    <style>
+      html { background: #f3f5f8; }
+      html[data-theme="dark"] { background: #141820; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
