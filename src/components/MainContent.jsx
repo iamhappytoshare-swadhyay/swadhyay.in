@@ -694,6 +694,7 @@ function SectionPage({
   onStartQuiz,
   onTrackDownload,
   onOpenFile,
+  onHome,
 }) {
   const [selectedQuizCategory, setSelectedQuizCategory] = useState('history')
   const [selectedNcertClass, setSelectedNcertClass] = useState('all')
@@ -714,6 +715,19 @@ function SectionPage({
     view === 'quiz'
       ? publishedQuizzes.filter((q) => matchesQuizCategory(q, selectedQuizCategory))
       : publishedQuizzes.filter((q) => matchesQuizCategory(q, view))
+
+  const sectionTitle = useMemo(() => {
+    if (view === 'quiz') return t.nav?.quiz ? `${t.nav.quiz} (Quizzes)` : 'प्रश्नोत्तरी (Quiz)'
+    if (view === 'pyq') return t.nav?.pyq || 'Previous Year Questions (PYQ)'
+    if (view === 'history') return t.nav?.history || 'इतिहास (History)'
+    if (view === 'geography') return t.nav?.geography || 'भूगोल (Geography)'
+    if (view === 'kvs') return 'KVS-NVS'
+    if (view === 'emrs') return 'EMRS'
+    if (view === 'upessc') return 'UPESSC'
+    if (cmsPage?.title) return cmsPage.title
+    if (t.nav?.[view]) return t.nav[view]
+    return view ? view.charAt(0).toUpperCase() + view.slice(1) : ''
+  }, [cmsPage, t, view])
 
   const quizFilterCounts = useMemo(() => {
     const counts = {}
@@ -762,6 +776,55 @@ function SectionPage({
 
   return (
     <>
+      {view !== 'ncert' ? (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            marginBottom: 16,
+            paddingBottom: 12,
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+              fontWeight: 800,
+              color: 'var(--text-primary)',
+            }}
+          >
+            {sectionTitle}
+          </h1>
+          {onHome ? (
+            <button
+              type="button"
+              className="text-button"
+              onClick={onHome}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: '1px solid var(--border)',
+                background: 'var(--card-bg, #ffffff)',
+                color: 'var(--text-primary)',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                flexShrink: 0,
+              }}
+            >
+              ← {t.backToHome || 'वापस जाएं'}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       {view === 'quiz' ? (
         <nav
           aria-label="Quiz Subject Categories"
@@ -827,6 +890,7 @@ function SectionPage({
         <NcertExplorer
           onOpenFile={onOpenFile}
           onTrackDownload={onTrackDownload}
+          onHome={onHome}
         />
       ) : null}
       {view === 'pyq' && publishedPyq.length > 0 ? (
@@ -931,17 +995,72 @@ function SectionPage({
   )
 }
 
-function CategoryPage({ t, slug, publishedPosts, onOpenPath }) {
+function CategoryPage({
+  t,
+  slug,
+  dynamicCategories = [],
+  publishedPosts,
+  onOpenPath,
+  onHome,
+}) {
+  const cat = dynamicCategories.find((c) => c.slug === slug)
+  const categoryTitle = cat?.name || slug
   const matchingPosts = publishedPosts.filter((post) => postMatchesCategory(post, slug))
 
   return (
-    <>
+    <section className="panel">
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12,
+          flexWrap: 'wrap',
+          marginBottom: 16,
+          paddingBottom: 12,
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+            fontWeight: 800,
+            color: 'var(--text-primary)',
+          }}
+        >
+          {categoryTitle}
+        </h1>
+        {onHome ? (
+          <button
+            type="button"
+            className="text-button"
+            onClick={onHome}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 8,
+              border: '1px solid var(--border)',
+              background: 'var(--card-bg, #ffffff)',
+              color: 'var(--text-primary)',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              flexShrink: 0,
+            }}
+          >
+            ← {t.backToHome || 'वापस जाएं'}
+          </button>
+        ) : null}
+      </div>
       {matchingPosts.length === 0 ? (
         <p className="empty">{t.noCategoryPosts}</p>
       ) : (
         <PostCardsGrid posts={matchingPosts} onOpenPath={onOpenPath} />
       )}
-    </>
+    </section>
   )
 }
 
@@ -997,29 +1116,51 @@ function PostDetailView({
 
   return (
     <article className="panel article-panel">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <button type="button" className="text-button" onClick={onHome}>
-          ← {t.backToHome}
-        </button>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12,
+          flexWrap: 'wrap',
+          marginBottom: 16,
+          paddingBottom: 12,
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+            fontWeight: 800,
+            color: 'var(--text-primary)',
+          }}
+        >
+          {post.title}
+        </h1>
         <button
           type="button"
           className="text-button"
-          onClick={() =>
-            onToggleBookmark({
-              id: post.id,
-              type: 'post',
-              title: post.title,
-              category: cats[0] || post.category || 'general',
-              path: `/post/${post.slug}`,
-            })
-          }
+          onClick={onHome}
+          style={{
+            padding: '6px 14px',
+            borderRadius: 8,
+            border: '1px solid var(--border)',
+            background: 'var(--card-bg, #ffffff)',
+            color: 'var(--text-primary)',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            flexShrink: 0,
+          }}
         >
-          <Icon name="bookmark" size={16} />
-          <span style={{ marginLeft: 6 }}>{saved ? 'Saved' : 'Save Bookmark'}</span>
+          ← {t.backToHome || 'वापस जाएं'}
         </button>
       </div>
-      <header className="article-head">
-        <h1>{post.title}</h1>
+      <header className="article-head" style={{ marginTop: 0 }}>
         {(post.showAuthor && post.author) || post.showDate !== false ? (
           <p className="article-meta">
             {post.showAuthor && post.author ? <span>{post.author}</span> : null}
@@ -1096,12 +1237,52 @@ function PageDetailView({ t, slug, publishedPages, onHome }) {
 
   return (
     <article className="panel article-panel">
-      <button type="button" className="text-button" onClick={onHome}>
-        ← {t.backToHome}
-      </button>
-      <header className="article-head">
-        <h1>{page.title}</h1>
-      </header>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12,
+          flexWrap: 'wrap',
+          marginBottom: 16,
+          paddingBottom: 12,
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+            fontWeight: 800,
+            color: 'var(--text-primary)',
+          }}
+        >
+          {page.title}
+        </h1>
+        {onHome ? (
+          <button
+            type="button"
+            className="text-button"
+            onClick={onHome}
+            style={{
+              padding: '6px 14px',
+              borderRadius: 8,
+              border: '1px solid var(--border)',
+              background: 'var(--card-bg, #ffffff)',
+              color: 'var(--text-primary)',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              flexShrink: 0,
+            }}
+          >
+            ← {t.backToHome || 'वापस जाएं'}
+          </button>
+        ) : null}
+      </div>
       <div
         className="article-prose"
         dangerouslySetInnerHTML={{ __html: renderedHtml }}
@@ -1711,6 +1892,7 @@ function renderBody({
         dynamicCategories={dynamicCategories}
         publishedPosts={publishedPosts}
         onOpenPath={onOpenPath}
+        onHome={onHome}
       />
     )
   }
@@ -1791,6 +1973,7 @@ function renderBody({
       onStartQuiz={onStartQuiz}
       onTrackDownload={onTrackDownload}
       onOpenFile={onOpenFile}
+      onHome={onHome}
     />
   )
 }

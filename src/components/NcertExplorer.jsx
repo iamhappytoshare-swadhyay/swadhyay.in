@@ -35,7 +35,7 @@ function getFolderColor(name, index) {
   return FOLDER_PALETTE[index % FOLDER_PALETTE.length]
 }
 
-export default function NcertExplorer({ onOpenFile, onTrackDownload }) {
+export default function NcertExplorer({ onOpenFile, onTrackDownload, onHome }) {
   const [currentPrefix, setCurrentPrefix] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -146,37 +146,63 @@ export default function NcertExplorer({ onOpenFile, onTrackDownload }) {
           </h1>
         </div>
 
-        {/* Refresh Icon Button */}
-        <button
-          type="button"
-          onClick={() => fetchTree(currentPrefix)}
-          title="रिफ्रेश करें"
-          aria-label="रिफ्रेश करें"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 8,
-            borderRadius: '50%',
-            color: '#1e1b4b',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)'
-            e.currentTarget.style.transform = 'rotate(45deg)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'none'
-            e.currentTarget.style.transform = 'none'
-          }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19" />
-          </svg>
-        </button>
+        {/* Action Buttons: Refresh & Back to Home */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={() => fetchTree(currentPrefix)}
+            title="रिफ्रेश करें"
+            aria-label="रिफ्रेश करें"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 8,
+              borderRadius: '50%',
+              color: '#1e1b4b',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.transform = 'rotate(45deg)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'none'
+              e.currentTarget.style.transform = 'none'
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19" />
+            </svg>
+          </button>
+
+          {onHome ? (
+            <button
+              type="button"
+              className="text-button"
+              onClick={onHome}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: '1px solid var(--border, #cbd5e1)',
+                background: 'var(--card-bg, #ffffff)',
+                color: 'var(--text-primary, #1e293b)',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                flexShrink: 0,
+              }}
+            >
+              ← वापस जाएं
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {/* Loading state */}
