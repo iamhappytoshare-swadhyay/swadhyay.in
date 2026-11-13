@@ -716,55 +716,6 @@ function SectionPage({
       ? publishedQuizzes.filter((q) => matchesQuizCategory(q, selectedQuizCategory))
       : publishedQuizzes.filter((q) => matchesQuizCategory(q, view))
 
-  const sectionTitle = useMemo(() => {
-    if (view === 'quiz') return t.nav?.quiz ? `${t.nav.quiz} (Quizzes)` : 'प्रश्नोत्तरी (Quiz)'
-    if (view === 'pyq') return t.nav?.pyq || 'Previous Year Questions (PYQ)'
-    if (view === 'history') return t.nav?.history || 'इतिहास (History)'
-    if (view === 'geography') return t.nav?.geography || 'भूगोल (Geography)'
-    if (view === 'kvs') return 'KVS-NVS'
-    if (view === 'emrs') return 'EMRS'
-    if (view === 'upessc') return 'UPESSC'
-    if (cmsPage?.title) return cmsPage.title
-    if (t.nav?.[view]) return t.nav[view]
-    return view ? view.charAt(0).toUpperCase() + view.slice(1) : ''
-  }, [cmsPage, t, view])
-
-  const quizFilterCounts = useMemo(() => {
-    const counts = {}
-    QUIZ_FILTER_CHIPS.forEach((chip) => {
-      counts[chip.id] = publishedQuizzes.filter((q) => matchesQuizCategory(q, chip.id)).length
-    })
-    return counts
-  }, [publishedQuizzes])
-
-  const ncertClassChips = useMemo(() => {
-    const classes = ['all', 'Class 12', 'Class 11', 'Class 10', 'Class 9', 'Class 8', 'Class 7', 'Class 6']
-    return classes.map((cls) => {
-      const count =
-        cls === 'all'
-          ? publishedNcert.length
-          : publishedNcert.filter(
-              (item) => (item.classLevel || item.class || '').toLowerCase() === cls.toLowerCase(),
-            ).length
-      return { id: cls, label: cls === 'all' ? (t.nav?.all || 'सभी') : cls, count }
-    })
-  }, [publishedNcert, t])
-
-  const filteredNcert = useMemo(() => {
-    if (view !== 'ncert') return publishedNcert
-    const query = ncertSearch.trim().toLowerCase()
-    return publishedNcert.filter((item) => {
-      const itemClass = (item.classLevel || item.class || '').toLowerCase()
-      if (selectedNcertClass !== 'all' && itemClass !== selectedNcertClass.toLowerCase()) {
-        return false
-      }
-      if (!query) return true
-      return `${item.title || ''} ${item.subject || ''} ${item.book || ''} ${item.chapter || ''}`
-        .toLowerCase()
-        .includes(query)
-    })
-  }, [view, publishedNcert, selectedNcertClass, ncertSearch])
-
   const hasContent =
     Boolean(cmsPage) ||
     view === 'quiz' ||
@@ -776,55 +727,6 @@ function SectionPage({
 
   return (
     <>
-      {view !== 'ncert' ? (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
-            marginBottom: 16,
-            paddingBottom: 12,
-            borderBottom: '1px solid var(--border)',
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-              fontWeight: 800,
-              color: 'var(--text-primary)',
-            }}
-          >
-            {sectionTitle}
-          </h1>
-          {onHome ? (
-            <button
-              type="button"
-              className="text-button"
-              onClick={onHome}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 8,
-                border: '1px solid var(--border)',
-                background: 'var(--card-bg, #ffffff)',
-                color: 'var(--text-primary)',
-                fontSize: '0.88rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                flexShrink: 0,
-              }}
-            >
-              ← {t.backToHome || 'वापस जाएं'}
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-
       {view === 'quiz' ? (
         <nav
           aria-label="Quiz Subject Categories"
@@ -832,9 +734,9 @@ function SectionPage({
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            marginBottom: 14,
+            marginBottom: 10,
             overflowX: 'auto',
-            padding: '2px 0 6px',
+            padding: '0 0 4px',
             WebkitOverflowScrolling: 'touch',
           }}
         >
@@ -998,63 +900,13 @@ function SectionPage({
 function CategoryPage({
   t,
   slug,
-  dynamicCategories = [],
   publishedPosts,
   onOpenPath,
-  onHome,
 }) {
-  const cat = dynamicCategories.find((c) => c.slug === slug)
-  const categoryTitle = cat?.name || slug
   const matchingPosts = publishedPosts.filter((post) => postMatchesCategory(post, slug))
 
   return (
-    <section className="panel">
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
-          marginBottom: 16,
-          paddingBottom: 12,
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-            fontWeight: 800,
-            color: 'var(--text-primary)',
-          }}
-        >
-          {categoryTitle}
-        </h1>
-        {onHome ? (
-          <button
-            type="button"
-            className="text-button"
-            onClick={onHome}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 8,
-              border: '1px solid var(--border)',
-              background: 'var(--card-bg, #ffffff)',
-              color: 'var(--text-primary)',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              flexShrink: 0,
-            }}
-          >
-            ← {t.backToHome || 'वापस जाएं'}
-          </button>
-        ) : null}
-      </div>
+    <section className="panel" style={{ paddingTop: 8 }}>
       {matchingPosts.length === 0 ? (
         <p className="empty">{t.noCategoryPosts}</p>
       ) : (
@@ -1115,52 +967,9 @@ function PostDetailView({
   const saved = isBookmarked(post.id, 'post')
 
   return (
-    <article className="panel article-panel">
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
-          marginBottom: 16,
-          paddingBottom: 12,
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-            fontWeight: 800,
-            color: 'var(--text-primary)',
-          }}
-        >
-          {post.title}
-        </h1>
-        <button
-          type="button"
-          className="text-button"
-          onClick={onHome}
-          style={{
-            padding: '6px 14px',
-            borderRadius: 8,
-            border: '1px solid var(--border)',
-            background: 'var(--card-bg, #ffffff)',
-            color: 'var(--text-primary)',
-            fontSize: '0.88rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            flexShrink: 0,
-          }}
-        >
-          ← {t.backToHome || 'वापस जाएं'}
-        </button>
-      </div>
+    <article className="panel article-panel" style={{ paddingTop: 10 }}>
       <header className="article-head" style={{ marginTop: 0 }}>
+        <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.3rem, 2.3vw, 1.85rem)' }}>{post.title}</h1>
         {(post.showAuthor && post.author) || post.showDate !== false ? (
           <p className="article-meta">
             {post.showAuthor && post.author ? <span>{post.author}</span> : null}
@@ -1236,53 +1045,10 @@ function PageDetailView({ t, slug, publishedPages, onHome }) {
   }
 
   return (
-    <article className="panel article-panel">
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
-          marginBottom: 16,
-          paddingBottom: 12,
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-            fontWeight: 800,
-            color: 'var(--text-primary)',
-          }}
-        >
-          {page.title}
-        </h1>
-        {onHome ? (
-          <button
-            type="button"
-            className="text-button"
-            onClick={onHome}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 8,
-              border: '1px solid var(--border)',
-              background: 'var(--card-bg, #ffffff)',
-              color: 'var(--text-primary)',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              flexShrink: 0,
-            }}
-          >
-            ← {t.backToHome || 'वापस जाएं'}
-          </button>
-        ) : null}
-      </div>
+    <article className="panel article-panel" style={{ paddingTop: 10 }}>
+      <header className="article-head" style={{ marginTop: 0 }}>
+        <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.3rem, 2.3vw, 1.85rem)' }}>{page.title}</h1>
+      </header>
       <div
         className="article-prose"
         dangerouslySetInnerHTML={{ __html: renderedHtml }}
