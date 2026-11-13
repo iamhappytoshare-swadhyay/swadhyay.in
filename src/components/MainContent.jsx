@@ -89,133 +89,56 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
         const durationMinutes = quiz.durationMinutes || quiz.duration || 20
 
         return (
-          <div
-            key={quiz.id}
-            style={{
-              background: 'var(--card-bg, #ffffff)',
-              borderRadius: 12,
-              border: '1px solid var(--border, #e2e8f0)',
-              boxShadow: '0 2px 5px rgba(0, 0, 0, 0.04)',
-              padding: '7px 6px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              minWidth: 0,
-              overflow: 'hidden',
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'none'
-              e.currentTarget.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.04)'
-            }}
-          >
+          <div key={quiz.id} className="quiz-card-item">
             {/* Card Title */}
-            <div
-              style={{
-                fontSize: '0.86rem',
-                fontWeight: 700,
-                color: 'var(--text-primary, #1e1b4b)',
-                lineHeight: 1.22,
-                marginBottom: 5,
-                wordBreak: 'break-word',
-              }}
-              title={quiz.title}
-            >
+            <div className="quiz-card-title" title={quiz.title}>
               {quiz.title}
             </div>
 
             {/* Bottom Row: Start Quiz Button + Stats */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 4,
-                marginTop: 'auto',
-                minWidth: 0,
-                width: '100%',
-              }}
-            >
+            <div className="quiz-card-bottom-row">
               {/* Start Quiz Button */}
               <button
                 type="button"
+                className="quiz-card-start-btn"
                 onClick={() => onStartQuiz(quiz)}
                 style={{
                   background: color.bg,
                   color: color.text,
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '4px 6px',
-                  fontSize: '0.70rem',
-                  fontWeight: 700,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 3,
-                  cursor: 'pointer',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
                 }}
               >
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="quiz-play-icon" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
                 <span>Start Quiz</span>
               </button>
 
               {/* Questions & Duration Info */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 2,
-                  fontSize: '0.68rem',
-                  fontWeight: 600,
-                  color: 'var(--text-primary, #1e293b)',
-                  textAlign: 'right',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  minWidth: 0,
-                  paddingRight: 1,
-                }}
-              >
+              <div className="quiz-card-stats">
                 {/* Question count */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2.5 }}>
+                <div className="quiz-card-stat-line">
                   <span
+                    className="quiz-card-qmark-badge"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: 12,
-                      height: 12,
-                      borderRadius: 2.5,
                       border: `1.2px solid ${color.accent}`,
                       color: color.accent,
-                      fontSize: '0.58rem',
-                      fontWeight: 800,
-                      lineHeight: 1,
-                      flexShrink: 0,
                     }}
                   >
                     ?
                   </span>
-                  <span style={{ whiteSpace: 'nowrap' }}>{questionCount} प्रश्न</span>
+                  <span>{questionCount} प्रश्न</span>
                 </div>
 
                 {/* Duration */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2.5 }}>
-                  <span style={{ color: color.accent, display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={color.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <div className="quiz-card-stat-line">
+                  <span className="quiz-card-clock-icon" style={{ color: color.accent }}>
+                    <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke={color.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="13" r="8" />
                       <path d="M12 9v4l2 2" />
                       <path d="M10 2h4" />
                     </svg>
                   </span>
-                  <span style={{ whiteSpace: 'nowrap' }}>{durationMinutes} मि.</span>
+                  <span>{durationMinutes} मि.</span>
                 </div>
               </div>
             </div>
@@ -731,17 +654,7 @@ function SectionPage({
   return (
     <>
       {view === 'quiz' ? (
-        <nav
-          aria-label="Quiz Subject Categories"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            marginBottom: 8,
-            width: '100%',
-            padding: '0 0 2px',
-          }}
-        >
+        <nav aria-label="Quiz Subject Categories" className="quiz-filter-chips-nav">
           {QUIZ_FILTER_CHIPS.map((chip) => {
             const active = selectedQuizCategory === chip.id
             const label =
@@ -754,23 +667,7 @@ function SectionPage({
                 type="button"
                 onClick={() => setSelectedQuizCategory(chip.id)}
                 aria-pressed={active}
-                style={{
-                  flex: '1 1 0',
-                  minWidth: 0,
-                  padding: '5px 4px',
-                  borderRadius: 8,
-                  border: active ? '1.5px solid #818cf8' : '1px solid var(--border, #cbd5e1)',
-                  background: active ? '#ede9fe' : 'var(--card-bg, #ffffff)',
-                  color: active ? '#4338ca' : 'var(--text-primary, #1e293b)',
-                  fontWeight: active ? 700 : 600,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  textAlign: 'center',
-                  boxShadow: active ? '0 1px 3px rgba(99, 102, 241, 0.18)' : 'none',
-                  transition: 'all 0.15s ease',
-                  userSelect: 'none',
-                }}
+                className={`quiz-filter-chip-btn ${active ? 'is-active' : ''}`}
               >
                 {label}
               </button>
