@@ -93,10 +93,10 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
             key={quiz.id}
             style={{
               background: 'var(--card-bg, #ffffff)',
-              borderRadius: 14,
+              borderRadius: 12,
               border: '1px solid var(--border, #e2e8f0)',
-              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
-              padding: '10px 10px 10px 10px',
+              boxShadow: '0 2px 5px rgba(0, 0, 0, 0.04)',
+              padding: '7px 6px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -110,18 +110,17 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'none'
-              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.04)'
+              e.currentTarget.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.04)'
             }}
           >
             {/* Card Title */}
             <div
               style={{
-                fontSize: '0.94rem',
+                fontSize: '0.86rem',
                 fontWeight: 700,
-                color: '#1e1b4b',
-                lineHeight: 1.25,
-                minHeight: '2.4em',
-                marginBottom: 8,
+                color: 'var(--text-primary, #1e1b4b)',
+                lineHeight: 1.22,
+                marginBottom: 5,
                 wordBreak: 'break-word',
               }}
               title={quiz.title}
@@ -135,9 +134,10 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 6,
+                gap: 4,
                 marginTop: 'auto',
                 minWidth: 0,
+                width: '100%',
               }}
             >
               {/* Start Quiz Button */}
@@ -148,20 +148,20 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
                   background: color.bg,
                   color: color.text,
                   border: 'none',
-                  borderRadius: 8,
-                  padding: '6px 8px',
-                  fontSize: '0.78rem',
+                  borderRadius: 6,
+                  padding: '4px 6px',
+                  fontSize: '0.70rem',
                   fontWeight: 700,
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 4,
+                  gap: 3,
                   cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.12)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
                 <span>Start Quiz</span>
@@ -173,46 +173,49 @@ function QuizCardsGrid({ quizzes, onStartQuiz }) {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 2,
-                  fontSize: '0.74rem',
+                  fontSize: '0.68rem',
                   fontWeight: 600,
-                  color: '#1e293b',
+                  color: 'var(--text-primary, #1e293b)',
                   textAlign: 'right',
                   whiteSpace: 'nowrap',
                   flexShrink: 0,
+                  minWidth: 0,
+                  paddingRight: 1,
                 }}
               >
                 {/* Question count */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2.5 }}>
                   <span
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: 14,
-                      height: 14,
-                      borderRadius: 3,
-                      border: `1.5px solid ${color.accent}`,
+                      width: 12,
+                      height: 12,
+                      borderRadius: 2.5,
+                      border: `1.2px solid ${color.accent}`,
                       color: color.accent,
-                      fontSize: '0.64rem',
+                      fontSize: '0.58rem',
                       fontWeight: 800,
                       lineHeight: 1,
+                      flexShrink: 0,
                     }}
                   >
                     ?
                   </span>
-                  <span>{questionCount} प्रश्न</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>{questionCount} प्रश्न</span>
                 </div>
 
                 {/* Duration */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3 }}>
-                  <span style={{ color: color.accent, display: 'inline-flex', alignItems: 'center' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2.5 }}>
+                  <span style={{ color: color.accent, display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={color.accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="13" r="8" />
                       <path d="M12 9v4l2 2" />
                       <path d="M10 2h4" />
                     </svg>
                   </span>
-                  <span>{durationMinutes} मि.</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>{durationMinutes} मि.</span>
                 </div>
               </div>
             </div>
@@ -638,8 +641,8 @@ function Home({
 const QUIZ_FILTER_CHIPS = [
   { id: 'history', labelHi: 'इतिहास', labelEn: 'History' },
   { id: 'geography', labelHi: 'भूगोल', labelEn: 'Geography' },
-  { id: 'affairs', labelHi: 'समसामयिकी', labelEn: 'Current Affairs' },
-  { id: 'gk', labelHi: 'सामान्य ज्ञान', labelEn: 'General Knowledge' },
+  { id: 'affairs', labelHi: 'Current Aff.', labelEn: 'Current Aff.' },
+  { id: 'gk', labelHi: 'GK', labelEn: 'GK' },
 ]
 
 function matchesQuizCategory(quiz, filterOrCategory) {
@@ -733,11 +736,10 @@ function SectionPage({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            marginBottom: 10,
-            overflowX: 'auto',
-            padding: '0 0 4px',
-            WebkitOverflowScrolling: 'touch',
+            gap: 4,
+            marginBottom: 8,
+            width: '100%',
+            padding: '0 0 2px',
           }}
         >
           {QUIZ_FILTER_CHIPS.map((chip) => {
@@ -753,16 +755,19 @@ function SectionPage({
                 onClick={() => setSelectedQuizCategory(chip.id)}
                 aria-pressed={active}
                 style={{
-                  padding: '7px 18px',
-                  borderRadius: 10,
-                  border: active ? '1.5px solid #c4b5fd' : '1.5px solid #cbd5e1',
+                  flex: '1 1 0',
+                  minWidth: 0,
+                  padding: '5px 4px',
+                  borderRadius: 8,
+                  border: active ? '1.5px solid #818cf8' : '1px solid var(--border, #cbd5e1)',
                   background: active ? '#ede9fe' : 'var(--card-bg, #ffffff)',
                   color: active ? '#4338ca' : 'var(--text-primary, #1e293b)',
                   fontWeight: active ? 700 : 600,
-                  fontSize: '0.9rem',
+                  fontSize: '0.78rem',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  boxShadow: active ? '0 1px 4px rgba(99, 102, 241, 0.15)' : 'none',
+                  textAlign: 'center',
+                  boxShadow: active ? '0 1px 3px rgba(99, 102, 241, 0.18)' : 'none',
                   transition: 'all 0.15s ease',
                   userSelect: 'none',
                 }}
