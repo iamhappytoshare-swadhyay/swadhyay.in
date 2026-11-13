@@ -291,29 +291,81 @@ function buildAutoResizeScript(frameId) {
     }
   }
 
-  function getContentHeight() {
-    var root = document.getElementById('sw-post-root');
-    var container = root || document.body;
-    if (!container) return 0;
+  function neutralizeFullHeightWrappers() {
+    try {
+      if (document.documentElement) {
+        document.documentElement.style.setProperty('min-height', '0px', 'important');
+        document.documentElement.style.setProperty('height', 'auto', 'important');
+        document.documentElement.style.setProperty('overflow-y', 'visible', 'important');
+      }
+      if (document.body) {
+        document.body.style.setProperty('min-height', '0px', 'important');
+        document.body.style.setProperty('height', 'auto', 'important');
+        document.body.style.setProperty('overflow-y', 'visible', 'important');
+      }
+      var elList = document.querySelectorAll('#root, #app, #__next, .app, [class*="min-h-screen"], [class*="h-screen"], [style*="100vh"], [style*="min-height"]');
+      for (var i = 0; i < elList.length; i++) {
+        var el = elList[i];
+        el.style.setProperty('min-height', '0px', 'important');
+        el.style.setProperty('height', 'auto', 'important');
+      }
+    } catch (_) {}
+  }
 
+  function getContentHeight() {
+    neutralizeFullHeightWrappers();
+
+    var body = document.body;
+    if (!body) return 0;
+
+    // 1. Unwrap single-wrapper hierarchy (e.g. body -> #root -> .app)
+    var root = document.getElementById('sw-post-root');
+    var container = root || body;
+    var depth = 0;
+    while (container && container.children && depth < 5) {
+      depth++;
+      var meaningfulKids = [];
+      for (var k = 0; k < container.children.length; k++) {
+        var kid = container.children[k];
+        var ktag = kid.tagName ? kid.tagName.toLowerCase() : '';
+        if (ktag !== 'script' && ktag !== 'style' && ktag !== 'link') {
+          meaningfulKids.push(kid);
+        }
+      }
+      if (meaningfulKids.length === 1 && (meaningfulKids[0].tagName.toLowerCase() === 'div' || meaningfulKids[0].tagName.toLowerCase() === 'main' || meaningfulKids[0].tagName.toLowerCase() === 'section')) {
+        container = meaningfulKids[0];
+      } else {
+        break;
+      }
+    }
+
+    // 2. Measure max bottom of all direct children of the unwrapped container
     var maxBottom = 0;
+    var scrollY = window.pageYOffset || (document.documentElement ? document.documentElement.scrollTop : 0) || 0;
     var children = container.children;
     for (var i = 0; i < children.length; i++) {
       var el = children[i];
       var tag = el.tagName ? el.tagName.toLowerCase() : '';
       if (tag === 'script' || tag === 'style' || tag === 'link') continue;
-      var bottom = el.offsetTop + el.offsetHeight;
-      if (bottom > maxBottom) maxBottom = bottom;
+      var rect = el.getBoundingClientRect();
+      var b = rect.bottom + scrollY;
+      if (b > maxBottom) maxBottom = b;
     }
 
-    var style = window.getComputedStyle(container);
-    var padBottom = parseFloat(style.paddingBottom) || 0;
-    var total = maxBottom + padBottom;
-
-    if (total <= 0) {
-      total = root ? root.scrollHeight : (document.body ? document.body.offsetHeight : 0);
+    // 3. Also scan significant content elements to guarantee nothing is cut off
+    var contentBlocks = body.querySelectorAll('form, table, footer, button, [role="main"], .emrs-card, .kvs-card, .card, main, .kvs-container, .emrs-container');
+    for (var m = 0; m < contentBlocks.length; m++) {
+      var cRect = contentBlocks[m].getBoundingClientRect();
+      var cBottom = cRect.bottom + scrollY;
+      if (cBottom > maxBottom) maxBottom = cBottom;
     }
-    return Math.ceil(total);
+
+    if (maxBottom <= 0) {
+      maxBottom = container.offsetHeight || body.offsetHeight || 140;
+    }
+
+    // Fixed safe padding once at the bottom
+    return Math.ceil(maxBottom + 16);
   }
 
   function postHeight() {
@@ -329,6 +381,7 @@ function buildAutoResizeScript(frameId) {
 
   function init() {
     wrapTables();
+    neutralizeFullHeightWrappers();
     postHeight();
 
     if (typeof ResizeObserver !== 'undefined') {
@@ -339,18 +392,15 @@ function buildAutoResizeScript(frameId) {
       if (root) {
         ro.observe(root);
       } else if (document.body) {
-        var first = document.body.firstElementChild;
-        if (first && first.tagName.toLowerCase() !== 'script' && first.tagName.toLowerCase() !== 'style') {
-          ro.observe(first);
-        } else {
-          ro.observe(document.body);
-        }
+        var observedTarget = document.getElementById('root') || document.body.firstElementChild || document.body;
+        ro.observe(observedTarget);
       }
     }
 
     if (typeof MutationObserver !== 'undefined' && document.body) {
       var mo = new MutationObserver(function() {
         wrapTables();
+        neutralizeFullHeightWrappers();
         postHeight();
       });
       mo.observe(document.body, { childList: true, subtree: true });
@@ -369,6 +419,7 @@ function buildAutoResizeScript(frameId) {
 
   window.addEventListener('load', function() {
     wrapTables();
+    neutralizeFullHeightWrappers();
     postHeight();
   });
 
@@ -382,6 +433,20 @@ function buildAutoResizeScript(frameId) {
 })();
 </script>`
 }
+
+const ANTI_EXPAND_GUARD_STYLE = `<style id="sw-anti-expand-guard">
+  html, body {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+  #root, #app, #__next, .app, [class*="min-h-screen"], [class*="h-screen"], [style*="100vh"], [style*="min-height: 100vh"], [style*="min-height:100vh"] {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+</style>`
 
 const SAFE_STORAGE_SHIM_SCRIPT = `<script>
 (function() {
@@ -437,9 +502,19 @@ function buildSandboxedSrcDoc({ html, customCss, frameId }) {
     }
     if (customStyleTag) {
       if (/<\/head>/i.test(doc)) {
-        doc = doc.replace(/<\/head>/i, `${customStyleTag}\n</head>`)
+        doc = doc.replace(/<\/head>/i, `${customStyleTag}\n${ANTI_EXPAND_GUARD_STYLE}\n</head>`)
+      } else if (/<body[^>]*>/i.test(doc)) {
+        doc = doc.replace(/<body([^>]*)>/i, `<head>${customStyleTag}\n${ANTI_EXPAND_GUARD_STYLE}</head>\n<body$1>`)
       } else {
-        doc = `${customStyleTag}\n${doc}`
+        doc = `${customStyleTag}\n${ANTI_EXPAND_GUARD_STYLE}\n${doc}`
+      }
+    } else {
+      if (/<\/head>/i.test(doc)) {
+        doc = doc.replace(/<\/head>/i, `${ANTI_EXPAND_GUARD_STYLE}\n</head>`)
+      } else if (/<body[^>]*>/i.test(doc)) {
+        doc = doc.replace(/<body([^>]*)>/i, `<head>${ANTI_EXPAND_GUARD_STYLE}</head>\n<body$1>`)
+      } else {
+        doc = `${ANTI_EXPAND_GUARD_STYLE}\n${doc}`
       }
     }
     if (/<\/body>/i.test(doc)) {
@@ -460,6 +535,7 @@ function buildSandboxedSrcDoc({ html, customCss, frameId }) {
   ${katexLink}
   ${baseStyleTag}
   ${customStyleTag}
+  ${ANTI_EXPAND_GUARD_STYLE}
 </head>
 <body>
   <div id="sw-post-root" class="sw-post-root">${processedHtml}</div>
@@ -498,17 +574,32 @@ export default function UniversalPostRenderer({
 
   useEffect(() => {
     if (!useIframe) return undefined
+    let lastTime = 0
+    let rapidCount = 0
+
     function handleMessage(event) {
       const data = event?.data
       if (!data || data.type !== 'swadhyay-post-height' || data.frameId !== frameId) return
       const nextHeight = Number(data.height)
-      if (Number.isFinite(nextHeight) && nextHeight > 0) {
-        setHeight((prev) => {
-          const target = Math.max(minHeight, Math.ceil(nextHeight) + 4)
-          if (Math.abs(prev - target) <= 4) return prev
-          return target
-        })
+      if (!Number.isFinite(nextHeight) || nextHeight <= 0) return
+
+      const now = Date.now()
+      if (now - lastTime < 350) {
+        rapidCount++
+        if (rapidCount > 6) {
+          // Circuit breaker: Freeze height to permanently prevent runaway loops across any post
+          return
+        }
+      } else {
+        rapidCount = 0
       }
+      lastTime = now
+
+      setHeight((prev) => {
+        const target = Math.max(minHeight, Math.ceil(nextHeight))
+        if (Math.abs(prev - target) <= 4) return prev
+        return target
+      })
     }
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
