@@ -64,28 +64,157 @@ function PostCardsGrid({ posts, onOpenPath }) {
   )
 }
 
+const QUIZ_BTN_PALETTE = [
+  '#dc2626', // Red (cards 0, 1)
+  '#ea580c', // Orange (cards 2, 3)
+  '#d97706', // Gold / Yellow (cards 4, 5)
+  '#16a34a', // Green (cards 6, 7)
+  '#2563eb', // Blue (cards 8, 9)
+  '#4f46e5', // Indigo (cards 10, 11)
+  '#7c3aed', // Purple
+  '#0d9488', // Teal
+  '#db2777', // Pink
+]
+
 function QuizCardsGrid({ quizzes, onStartQuiz }) {
   if (!quizzes?.length) return null
   return (
-    <div className="post-card-grid">
-      {quizzes.map((quiz) => (
-        <button
-          key={quiz.id}
-          type="button"
-          className="feature-card"
-          onClick={() => onStartQuiz(quiz)}
-        >
-          <span className="tone tone-amber">
-            <Icon name="trophy" size={18} />
-          </span>
-          <span className="card-title">{quiz.title}</span>
-          {quiz.description ? <span className="card-text">{quiz.description}</span> : null}
-          <span className="card-meta">
-            {quiz.durationMinutes || 15} min · +{quiz.marksPerQuestion ?? 1} / -
-            {quiz.negativeMarking ?? 0} · Start Quiz
-          </span>
-        </button>
-      ))}
+    <div className="quiz-cards-grid-2col">
+      {quizzes.map((quiz, idx) => {
+        const btnColor = QUIZ_BTN_PALETTE[Math.floor(idx / 2) % QUIZ_BTN_PALETTE.length]
+        const questionCount =
+          quiz.totalQuestions ||
+          quiz.questionsCount ||
+          quiz.questionCount ||
+          (Array.isArray(quiz.questions) ? quiz.questions.length : 30)
+        const durationMinutes = quiz.durationMinutes || quiz.duration || 20
+
+        return (
+          <div
+            key={quiz.id}
+            style={{
+              background: 'var(--card-bg, #ffffff)',
+              borderRadius: 18,
+              border: '1px solid var(--border, #e2e8f0)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+              padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.08)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'none'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)'
+            }}
+          >
+            {/* Card Title */}
+            <div
+              style={{
+                fontSize: '1.12rem',
+                fontWeight: 700,
+                color: '#1e1b4b',
+                lineHeight: 1.32,
+                marginBottom: 16,
+                wordBreak: 'break-word',
+              }}
+            >
+              {quiz.title}
+            </div>
+
+            {/* Bottom Row: Start Quiz Button + Stats */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+                marginTop: 'auto',
+              }}
+            >
+              {/* Start Quiz Button */}
+              <button
+                type="button"
+                onClick={() => onStartQuiz(quiz)}
+                style={{
+                  background: btnColor,
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 10,
+                  padding: '8px 14px',
+                  fontSize: '0.86rem',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.12)',
+                  transition: 'opacity 0.15s ease',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.92')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#ffffff">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                <span>Start Quiz</span>
+              </button>
+
+              {/* Questions & Duration Info */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  color: '#1e293b',
+                  textAlign: 'right',
+                }}
+              >
+                {/* Question count */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 17,
+                      height: 17,
+                      borderRadius: 4,
+                      border: '1.5px solid #dc2626',
+                      color: '#dc2626',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      lineHeight: 1,
+                    }}
+                  >
+                    ?
+                  </span>
+                  <span>{questionCount} प्रश्न</span>
+                </div>
+
+                {/* Duration */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
+                  <span style={{ color: '#dc2626', display: 'inline-flex', alignItems: 'center' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="13" r="8" />
+                      <path d="M12 9v4l2 2" />
+                      <path d="M10 2h4" />
+                    </svg>
+                  </span>
+                  <span>{durationMinutes} मि.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -503,11 +632,10 @@ function Home({
 }
 
 const QUIZ_FILTER_CHIPS = [
-  { id: 'all', labelHi: 'सभी', labelEn: 'All', tone: 'all' },
-  { id: 'history', labelHi: 'इतिहास', labelEn: 'History', tone: 'amber' },
-  { id: 'geography', labelHi: 'भूगोल', labelEn: 'Geography', tone: 'teal' },
-  { id: 'gk', labelHi: 'सामान्य ज्ञान', labelEn: 'GK', tone: 'violet' },
-  { id: 'affairs', labelHi: 'समसामयिकी', labelEn: 'Current Affairs', tone: 'blue' },
+  { id: 'history', labelHi: 'इतिहास', labelEn: 'History' },
+  { id: 'geography', labelHi: 'भूगोल', labelEn: 'Geography' },
+  { id: 'affairs', labelHi: 'समसामयिकी', labelEn: 'Current Affairs' },
+  { id: 'gk', labelHi: 'सामान्य ज्ञान', labelEn: 'General Knowledge' },
 ]
 
 function matchesQuizCategory(quiz, filterOrCategory) {
@@ -563,7 +691,7 @@ function SectionPage({
   onTrackDownload,
   onOpenFile,
 }) {
-  const [selectedQuizCategory, setSelectedQuizCategory] = useState('all')
+  const [selectedQuizCategory, setSelectedQuizCategory] = useState('history')
   const [selectedNcertClass, setSelectedNcertClass] = useState('all')
   const [ncertSearch, setNcertSearch] = useState('')
 
@@ -631,35 +759,53 @@ function SectionPage({
   return (
     <>
       {view === 'quiz' ? (
-        <section className="quiz-chips-container" aria-label="Quiz Category Filters">
-          <div className="quiz-chips-bar">
-            {QUIZ_FILTER_CHIPS.map((chip) => {
-              const active = selectedQuizCategory === chip.id
-              const count = quizFilterCounts[chip.id] ?? 0
-              const label =
-                t.locale === 'hi' || t.lang === 'hi' || t.nav.home === 'होम'
-                  ? chip.labelHi
-                  : chip.labelEn
-              return (
-                <button
-                  key={chip.id}
-                  type="button"
-                  className={`quiz-chip-btn quiz-chip--${chip.tone} ${active ? 'is-active' : ''}`}
-                  onClick={() => setSelectedQuizCategory(chip.id)}
-                  aria-pressed={active}
-                >
-                  <span>
-                    {label}
-                    {count > 0 ? ` (${count})` : ''}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </section>
+        <nav
+          aria-label="Quiz Subject Categories"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 20,
+            overflowX: 'auto',
+            padding: '4px 2px 8px',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          {QUIZ_FILTER_CHIPS.map((chip) => {
+            const active = selectedQuizCategory === chip.id
+            const label =
+              t.locale === 'hi' || t.lang === 'hi' || t.nav?.home === 'होम'
+                ? chip.labelHi
+                : chip.labelEn
+            return (
+              <button
+                key={chip.id}
+                type="button"
+                onClick={() => setSelectedQuizCategory(chip.id)}
+                aria-pressed={active}
+                style={{
+                  padding: '9px 24px',
+                  borderRadius: 12,
+                  border: active ? '1.5px solid #c4b5fd' : '1.5px solid #cbd5e1',
+                  background: active ? '#ede9fe' : 'var(--card-bg, #ffffff)',
+                  color: active ? '#4338ca' : 'var(--text-primary, #1e293b)',
+                  fontWeight: active ? 700 : 600,
+                  fontSize: '0.96rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  boxShadow: active ? '0 2px 6px rgba(99, 102, 241, 0.15)' : 'none',
+                  transition: 'all 0.15s ease',
+                  userSelect: 'none',
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </nav>
       ) : null}
 
-      {cmsPage && view !== 'ncert' ? (
+      {cmsPage && view !== 'ncert' && view !== 'quiz' ? (
         <section className="panel article-panel" style={{ marginBottom: 18 }}>
           <div
             className="article-prose"
@@ -729,25 +875,31 @@ function SectionPage({
           </div>
         </section>
       ) : null}
-      {matchingQuizzes.length > 0 ? (
+      {view === 'quiz' ? (
+        matchingQuizzes.length > 0 ? (
+          <div style={{ marginBottom: 28 }}>
+            <QuizCardsGrid quizzes={matchingQuizzes} onStartQuiz={onStartQuiz} />
+          </div>
+        ) : (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '60px 20px',
+              background: 'var(--card-bg, #ffffff)',
+              borderRadius: 16,
+              border: '1px solid var(--border, #e2e8f0)',
+              color: 'var(--text-muted, #64748b)',
+            }}
+          >
+            <p style={{ margin: 0, fontSize: '1rem', fontWeight: 500 }}>
+              इस श्रेणी में अभी कोई क्विज़ उपलब्ध नहीं है।
+            </p>
+          </div>
+        )
+      ) : matchingQuizzes.length > 0 ? (
         <section className="panel">
           <h2>Practice Quizzes ({matchingQuizzes.length})</h2>
           <QuizCardsGrid quizzes={matchingQuizzes} onStartQuiz={onStartQuiz} />
-        </section>
-      ) : view === 'quiz' ? (
-        <section className="panel">
-          <p className="empty">इस श्रेणी में अभी कोई क्विज़ उपलब्ध नहीं है।</p>
-          {selectedQuizCategory !== 'all' && publishedQuizzes.length > 0 ? (
-            <div style={{ textAlign: 'center', marginTop: 12 }}>
-              <button
-                type="button"
-                className="quiz-chip-btn quiz-chip--all is-active"
-                onClick={() => setSelectedQuizCategory('all')}
-              >
-                सभी {publishedQuizzes.length} क्विज़ देखें
-              </button>
-            </div>
-          ) : null}
         </section>
       ) : null}
       {matchingNotes.length > 0 ? (
