@@ -111,6 +111,31 @@ const graphics = {
       <path d="M16 17H8" />
     </>
   ),
+  folder: (
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+  ),
+  cloud: (
+    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+  ),
+  arrowLeft: (
+    <>
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
+    </>
+  ),
+  arrowUp: (
+    <>
+      <line x1="12" y1="19" x2="12" y2="5" />
+      <polyline points="5 12 12 5 19 12" />
+    </>
+  ),
+  refresh: (
+    <>
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </>
+  ),
   lock: (
     <>
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />

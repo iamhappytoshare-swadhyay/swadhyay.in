@@ -3,6 +3,7 @@ import Icon from './Icon.jsx'
 import QuizRunnerModal from './QuizRunnerModal.jsx'
 import PostCommentsSection from './PostCommentsSection.jsx'
 import UniversalPostRenderer from './UniversalPostRenderer.jsx'
+import NcertExplorer from './NcertExplorer.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { trackAnalyticsEvent } from '../services/analyticsService.js'
 import {
@@ -621,7 +622,7 @@ function SectionPage({
   const hasContent =
     Boolean(cmsPage) ||
     view === 'quiz' ||
-    (view === 'ncert' && publishedNcert.length > 0) ||
+    view === 'ncert' ||
     (view === 'pyq' && publishedPyq.length > 0) ||
     matchingQuizzes.length > 0 ||
     matchingNotes.length > 0 ||
@@ -697,96 +698,82 @@ function SectionPage({
       ) : null}
 
       {view === 'ncert' ? (
-        <section className="panel">
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 12,
-              marginBottom: 16,
-            }}
-          >
-            <div>
-              <h2 style={{ margin: 0 }}>NCERT Books &amp; Chapters ({filteredNcert.length})</h2>
-              <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                Cloudflare R2 ncrt स्टोरेज से लिंक्ड एवं सिंक प्रामाणिक पाठ्यपुस्तकें व अध्याय PDF
-              </span>
-            </div>
+        <>
+          <NcertExplorer
+            t={t}
+            onOpenFile={onOpenFile}
+            onTrackDownload={onTrackDownload}
+          />
 
-            {publishedNcert.length > 4 ? (
-              <div style={{ minWidth: 200, flex: '1 1 220px', maxWidth: 320 }}>
-                <input
-                  type="search"
-                  placeholder="विषय, पुस्तक या अध्याय खोजें…"
-                  value={ncertSearch}
-                  onChange={(e) => setNcertSearch(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '7px 14px',
-                    borderRadius: 999,
-                    border: '1px solid var(--border)',
-                    background: 'var(--input-bg)',
-                    fontSize: '0.86rem',
-                  }}
-                />
+          {publishedNcert.length > 0 ? (
+            <section className="panel" style={{ marginTop: 20 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 12,
+                  marginBottom: 16,
+                }}
+              >
+                <div>
+                  <h3 style={{ margin: 0 }}>अतिरिक्त NCERT संग्रह ({filteredNcert.length})</h3>
+                  <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+                    कैटलॉग में मैनुअल रूप से जोड़े गए NCERT संदर्भ
+                  </span>
+                </div>
               </div>
-            ) : null}
-          </div>
 
-          {filteredNcert.length === 0 ? (
-            <p className="empty">इस क्लास या खोज में कोई NCERT सामग्री नहीं मिली।</p>
-          ) : (
-            <div className="list">
-              {filteredNcert.map((item) => {
-                const href = item.fileUrl || item.url || item.pdfUrl || ''
-                return (
-                  <a
-                    key={`${item._collection || 'ncert'}-${item.id}`}
-                    href={href || '#'}
-                    target={href ? '_blank' : undefined}
-                    rel={href ? 'noopener noreferrer' : undefined}
-                    className="row"
-                    style={{ textDecoration: 'none' }}
-                    onClick={(e) => {
-                      if (onOpenFile) {
-                        onOpenFile(e, {
-                          href,
-                          id: item.id,
-                          type: 'ncert',
-                          title: item.title,
-                          category: 'ncert',
-                        })
-                      } else if (href) {
-                        onTrackDownload?.({
-                          id: item.id,
-                          type: 'ncert',
-                          title: item.title,
-                          category: 'ncert',
-                          url: href,
-                        })
-                      }
-                    }}
-                  >
-                    <span className="tone tone-red">
-                      <Icon name="book" size={18} />
-                    </span>
-                    <span className="row-copy">
-                      <span className="row-title">{item.title}</span>
-                      <span className="row-meta">
-                        {item.classLevel || item.class || 'NCERT'} · {item.subject || 'Subject'}
-                        {item.book ? ` · ${item.book}` : ''}
-                        {item.chapter ? ` · ${item.chapter}` : ''}
-                        <span style={{ color: '#0284c7', marginLeft: 8 }}>☁️ R2 PDF</span>
+              <div className="list">
+                {filteredNcert.map((item) => {
+                  const href = item.fileUrl || item.url || item.pdfUrl || ''
+                  return (
+                    <a
+                      key={`${item._collection || 'ncert'}-${item.id}`}
+                      href={href || '#'}
+                      target={href ? '_blank' : undefined}
+                      rel={href ? 'noopener noreferrer' : undefined}
+                      className="row"
+                      style={{ textDecoration: 'none' }}
+                      onClick={(e) => {
+                        if (onOpenFile) {
+                          onOpenFile(e, {
+                            href,
+                            id: item.id,
+                            type: 'ncert',
+                            title: item.title,
+                            category: 'ncert',
+                          })
+                        } else if (href) {
+                          onTrackDownload?.({
+                            id: item.id,
+                            type: 'ncert',
+                            title: item.title,
+                            category: 'ncert',
+                            url: href,
+                          })
+                        }
+                      }}
+                    >
+                      <span className="tone tone-red">
+                        <Icon name="book" size={18} />
                       </span>
-                    </span>
-                  </a>
-                )
-              })}
-            </div>
-          )}
-        </section>
+                      <span className="row-copy">
+                        <span className="row-title">{item.title}</span>
+                        <span className="row-meta">
+                          {item.classLevel || item.class || 'NCERT'} · {item.subject || 'Subject'}
+                          {item.book ? ` · ${item.book}` : ''}
+                          {item.chapter ? ` · ${item.chapter}` : ''}
+                        </span>
+                      </span>
+                    </a>
+                  )
+                })}
+              </div>
+            </section>
+          ) : null}
+        </>
       ) : null}
       {view === 'pyq' && publishedPyq.length > 0 ? (
         <section className="panel">
