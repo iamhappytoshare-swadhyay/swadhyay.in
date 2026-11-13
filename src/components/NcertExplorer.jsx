@@ -10,11 +10,32 @@ function formatBytes(bytes) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
 
-export default function NcertExplorer({
-  t,
-  onOpenFile,
-  onTrackDownload,
-}) {
+const FOLDER_PALETTE = [
+  '#dc2626', // Red (Class 6)
+  '#ea580c', // Orange (Class 7)
+  '#d97706', // Yellow / Gold (Class 8)
+  '#16a34a', // Green (Class 9)
+  '#2563eb', // Blue (Class 10)
+  '#4f46e5', // Indigo (Class 11)
+  '#7c3aed', // Purple (Class 12)
+  '#0d9488', // Teal
+  '#db2777', // Pink
+  '#0284c7', // Sky
+]
+
+function getFolderColor(name, index) {
+  const clean = String(name || '').toLowerCase()
+  if (clean.includes('6')) return FOLDER_PALETTE[0]
+  if (clean.includes('7')) return FOLDER_PALETTE[1]
+  if (clean.includes('8')) return FOLDER_PALETTE[2]
+  if (clean.includes('9')) return FOLDER_PALETTE[3]
+  if (clean.includes('10')) return FOLDER_PALETTE[4]
+  if (clean.includes('11')) return FOLDER_PALETTE[5]
+  if (clean.includes('12')) return FOLDER_PALETTE[6]
+  return FOLDER_PALETTE[index % FOLDER_PALETTE.length]
+}
+
+export default function NcertExplorer({ onOpenFile, onTrackDownload }) {
   const [currentPrefix, setCurrentPrefix] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -23,7 +44,6 @@ export default function NcertExplorer({
     files: [],
     breadcrumbs: [],
   })
-  const [searchQuery, setSearchQuery] = useState('')
 
   const fetchTree = useCallback(async (prefix = '') => {
     setLoading(true)
@@ -32,7 +52,7 @@ export default function NcertExplorer({
       const url = `${WORKER_API_URL}/api/public/ncert/tree?prefix=${encodeURIComponent(prefix)}`
       const res = await fetch(url)
       if (!res.ok) {
-        throw new Error(`R2 NCERT सर्वर से डेटा प्राप्त नहीं हो सका (${res.status})`)
+        throw new Error(`सर्वर से डेटा लोड नहीं हो सका (${res.status})`)
       }
       const data = await res.json()
       if (!data.ok) {
@@ -55,24 +75,7 @@ export default function NcertExplorer({
     fetchTree(currentPrefix)
   }, [currentPrefix, fetchTree])
 
-  const filteredFolders = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return treeData.folders
-    return treeData.folders.filter((f) => f.name.toLowerCase().includes(q))
-  }, [treeData.folders, searchQuery])
-
-  const filteredFiles = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return treeData.files
-    return treeData.files.filter(
-      (f) =>
-        f.name.toLowerCase().includes(q) ||
-        (f.title && f.title.toLowerCase().includes(q)) ||
-        (f.subject && f.subject.toLowerCase().includes(q)),
-    )
-  }, [treeData.files, searchQuery])
-
-  // Get parent prefix for "Up/Back" button
+  // Get parent prefix for "Back" navigation
   const parentPrefix = useMemo(() => {
     if (!currentPrefix) return null
     const parts = currentPrefix.replace(/\/+$/, '').split('/')
@@ -81,189 +84,108 @@ export default function NcertExplorer({
     return `${parts.join('/')}/`
   }, [currentPrefix])
 
+  // Current folder title
+  const currentTitle = useMemo(() => {
+    if (!currentPrefix) return 'NCERT Books'
+    const parts = currentPrefix.replace(/\/+$/, '').split('/')
+    return parts[parts.length - 1] || 'NCERT Books'
+  }, [currentPrefix])
+
   return (
-    <section className="panel ncert-explorer-panel" style={{ padding: '20px 24px', marginBottom: 24 }}>
-      {/* Header bar */}
+    <div style={{ maxWidth: 840, margin: '0 auto', padding: '8px 0 32px' }}>
+      {/* Clean Header Bar */}
       <div
         style={{
           display: 'flex',
+          alignItems: 'center',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          gap: 16,
-          marginBottom: 16,
+          marginBottom: 20,
+          padding: '0 4px',
         }}
       >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {currentPrefix ? (
+            <button
+              type="button"
+              onClick={() => setCurrentPrefix(parentPrefix !== null ? parentPrefix : '')}
+              aria-label="पीछे जाएं"
               style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                background: 'rgba(2, 132, 199, 0.12)',
-                color: '#0284c7',
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                color: '#1e293b',
+                transition: 'background 0.15s ease',
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
             >
-              <Icon name="cloud" size={22} />
-            </span>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700 }}>
-                NCERT Books &amp; Study Material
-              </h2>
-              <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                Cloudflare R2 &apos;ncert&apos; बकेट से लाइव कनेक्टेड फोल्डर व ओरिजिनल PDF
-              </span>
-            </div>
-          </div>
-        </div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+            </button>
+          ) : null}
 
-        {/* Quick Search & Refresh */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', width: 220 }}>
-            <input
-              type="search"
-              placeholder="खोजें (फ़ोल्डर / फ़ाइल)…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '7px 12px 7px 32px',
-                borderRadius: 8,
-                border: '1px solid var(--border)',
-                background: 'var(--input-bg)',
-                fontSize: '0.86rem',
-                outline: 'none',
-              }}
-            />
-            <span
-              style={{
-                position: 'absolute',
-                left: 9,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: 'var(--text-muted)',
-                pointerEvents: 'none',
-              }}
-            >
-              <Icon name="search" size={15} />
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="text-button"
-            title="रिफ्रेश करें"
-            onClick={() => fetchTree(currentPrefix)}
+          <h1
             style={{
-              padding: '7px 12px',
-              borderRadius: 8,
-              border: '1px solid var(--border)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: '0.86rem',
-              cursor: 'pointer',
-              background: 'var(--card-bg, #fff)',
+              margin: 0,
+              fontSize: '1.65rem',
+              fontWeight: 800,
+              color: '#1e1b4b',
+              letterSpacing: '-0.3px',
+              wordBreak: 'break-word',
             }}
           >
-            <Icon name="refresh" size={15} />
-            <span>रिफ्रेश</span>
-          </button>
+            {currentTitle}
+          </h1>
         </div>
-      </div>
 
-      {/* Breadcrumb Navigation Bar */}
-      <nav
-        aria-label="R2 Folder Breadcrumbs"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 6,
-          padding: '8px 12px',
-          background: 'var(--input-bg, #f8fafc)',
-          borderRadius: 8,
-          border: '1px solid var(--border, #e2e8f0)',
-          marginBottom: 18,
-          fontSize: '0.88rem',
-        }}
-      >
+        {/* Refresh Icon Button */}
         <button
           type="button"
-          onClick={() => setCurrentPrefix('')}
+          onClick={() => fetchTree(currentPrefix)}
+          title="रिफ्रेश करें"
+          aria-label="रिफ्रेश करें"
           style={{
             background: 'none',
             border: 'none',
-            color: currentPrefix === '' ? 'var(--text-primary, #0f172a)' : '#0284c7',
-            fontWeight: currentPrefix === '' ? 700 : 500,
-            cursor: currentPrefix === '' ? 'default' : 'pointer',
+            cursor: 'pointer',
+            padding: 8,
+            borderRadius: '50%',
+            color: '#1e1b4b',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 5,
-            padding: '2px 4px',
+            justifyContent: 'center',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)'
+            e.currentTarget.style.transform = 'rotate(45deg)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'none'
+            e.currentTarget.style.transform = 'none'
           }}
         >
-          <Icon name="folder" size={16} />
-          <span>NCERT Home</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19" />
+          </svg>
         </button>
-
-        {treeData.breadcrumbs.map((crumb, idx) => {
-          const isLast = idx === treeData.breadcrumbs.length - 1
-          return (
-            <span key={crumb.prefix} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: 'var(--text-muted)' }}>/</span>
-              <button
-                type="button"
-                onClick={() => setCurrentPrefix(crumb.prefix)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: isLast ? 'var(--text-primary, #0f172a)' : '#0284c7',
-                  fontWeight: isLast ? 700 : 500,
-                  cursor: isLast ? 'default' : 'pointer',
-                  padding: '2px 4px',
-                  textDecoration: isLast ? 'none' : 'underline',
-                  textUnderlineOffset: 3,
-                }}
-              >
-                {crumb.name}
-              </button>
-            </span>
-          )
-        })}
-
-        {parentPrefix !== null && (
-          <button
-            type="button"
-            onClick={() => setCurrentPrefix(parentPrefix)}
-            style={{
-              marginLeft: 'auto',
-              background: 'none',
-              border: 'none',
-              color: '#0284c7',
-              fontSize: '0.84rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
-            <Icon name="arrowUp" size={14} />
-            <span>ऊपर जाएं (Back)</span>
-          </button>
-        )}
-      </nav>
+      </div>
 
       {/* Loading state */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: '1.1rem', marginBottom: 8 }}>Cloudflare R2 बकेट लोड हो रहा है…</div>
-          <span style={{ fontSize: '0.85rem' }}>कृपया प्रतीक्षा करें</span>
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', marginBottom: 6 }}>
+            लोड हो रहा है…
+          </div>
+          <span style={{ fontSize: '0.88rem' }}>कृपया प्रतीक्षा करें</span>
         </div>
       )}
 
@@ -271,15 +193,17 @@ export default function NcertExplorer({
       {!loading && error && (
         <div
           style={{
-            padding: 16,
-            borderRadius: 8,
+            padding: '16px 20px',
+            borderRadius: 14,
             background: '#fef2f2',
             border: '1px solid #fecaca',
             color: '#991b1b',
-            marginBottom: 16,
+            marginBottom: 20,
             display: 'flex',
-            justifyContent: 'space-between',
             alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
           }}
         >
           <div>
@@ -289,14 +213,14 @@ export default function NcertExplorer({
             type="button"
             onClick={() => fetchTree(currentPrefix)}
             style={{
-              padding: '6px 14px',
-              borderRadius: 6,
-              border: '1px solid #dc2626',
+              padding: '8px 18px',
+              borderRadius: 8,
+              border: 'none',
               background: '#dc2626',
-              color: '#fff',
-              cursor: 'pointer',
+              color: '#ffffff',
               fontWeight: 600,
-              fontSize: '0.84rem',
+              fontSize: '0.88rem',
+              cursor: 'pointer',
             }}
           >
             पुनः प्रयास करें
@@ -304,200 +228,198 @@ export default function NcertExplorer({
         </div>
       )}
 
-      {/* Content View */}
+      {/* Main Content */}
       {!loading && !error && (
-        <>
-          {/* Folders Section */}
-          {filteredFolders.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
+        <div>
+          {/* Folders List (Exact banner style from reference image) */}
+          {treeData.folders.map((folder, idx) => {
+            const cardBg = getFolderColor(folder.name, idx)
+            const countText =
+              typeof folder.fileCount === 'number' && folder.fileCount > 0
+                ? `${folder.fileCount} फाइलें • खोलें`
+                : 'खोलें'
+
+            return (
               <div
+                key={folder.prefix}
+                onClick={() => setCurrentPrefix(folder.prefix)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setCurrentPrefix(folder.prefix)
+                  }
+                }}
                 style={{
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  marginBottom: 12,
+                  background: cardBg,
+                  borderRadius: 18,
+                  padding: '18px 24px',
+                  marginBottom: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  color: '#ffffff',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                  transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                  userSelect: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.16)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)'
                 }}
               >
-                फ़ोल्डर्स ({filteredFolders.length})
-              </div>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                  gap: 12,
-                }}
-              >
-                {filteredFolders.map((folder) => (
-                  <button
-                    key={folder.prefix}
-                    type="button"
-                    onClick={() => {
-                      setCurrentPrefix(folder.prefix)
-                      setSearchQuery('')
-                    }}
+                {/* Left: Folder Icon + Title & Subtitle */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20, minWidth: 0 }}>
+                  <div
                     style={{
+                      width: 44,
+                      height: 44,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 12,
-                      padding: '12px 16px',
-                      borderRadius: 10,
-                      border: '1px solid var(--border, #e2e8f0)',
-                      background: 'var(--card-bg, #ffffff)',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#0284c7'
-                      e.currentTarget.style.transform = 'translateY(-1px)'
-                      e.currentTarget.style.boxShadow = '0 4px 8px rgba(2,132,199,0.1)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'var(--border, #e2e8f0)'
-                      e.currentTarget.style.transform = 'none'
-                      e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)'
+                      justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 36,
-                        height: 36,
-                        borderRadius: 8,
-                        background: 'rgba(2, 132, 199, 0.12)',
-                        color: '#0284c7',
-                        flexShrink: 0,
-                      }}
+                    {/* Bold Solid Folder SVG */}
+                    <svg
+                      width="38"
+                      height="38"
+                      viewBox="0 0 24 24"
+                      fill="#ffffff"
+                      stroke="#ffffff"
+                      strokeWidth="0.5"
                     >
-                      <Icon name="folder" size={20} />
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontWeight: 600,
-                          fontSize: '0.94rem',
-                          color: 'var(--text-primary, #0f172a)',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                        title={folder.name}
-                      >
-                        {folder.name}
-                      </div>
-                      <span style={{ fontSize: '0.78rem', color: '#0284c7' }}>
-                        फ़ोल्डर खोलें →
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </div>
 
-          {/* Files Section */}
-          {filteredFiles.length > 0 && (
-            <div>
-              <div
-                style={{
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  marginBottom: 12,
-                }}
-              >
-                दस्तावेज़ एवं अध्याय PDF ({filteredFiles.length})
-              </div>
-              <div className="list">
-                {filteredFiles.map((file) => {
-                  const directProxyUrl = `${WORKER_API_URL}${file.proxyUrl}`
-                  return (
+                  <div style={{ minWidth: 0 }}>
                     <div
-                      key={file.key}
-                      className="row"
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: 12,
-                        padding: '12px 16px',
+                        fontSize: '1.35rem',
+                        fontWeight: 700,
+                        lineHeight: 1.25,
+                        letterSpacing: '-0.2px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title={folder.name}
+                    >
+                      {folder.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '0.92rem',
+                        color: 'rgba(255, 255, 255, 0.92)',
+                        marginTop: 4,
+                        fontWeight: 500,
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 300px' }}>
-                        <span className="tone tone-red" style={{ flexShrink: 0 }}>
-                          <Icon name="book" size={18} />
-                        </span>
-                        <div className="row-copy" style={{ minWidth: 0 }}>
-                          <span className="row-title" style={{ wordBreak: 'break-word' }}>
-                            {file.title || file.name}
-                          </span>
-                          <span className="row-meta" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            {file.classLevel && <span>{file.classLevel}</span>}
-                            {file.subject && <span>· {file.subject}</span>}
-                            {file.size > 0 && (
-                              <span style={{ color: 'var(--text-muted)' }}>
-                                · {formatBytes(file.size)}
-                              </span>
-                            )}
-                            <span style={{ color: '#0284c7', fontWeight: 600 }}>☁️ R2</span>
-                          </span>
-                        </div>
-                      </div>
+                      {countText}
+                    </div>
+                  </div>
+                </div>
 
-                      {/* Action buttons */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          onClick={(e) => {
-                            if (onOpenFile) {
-                              onOpenFile(e, {
-                                href: directProxyUrl,
-                                id: `r2_${file.key}`,
-                                type: 'ncert',
-                                title: file.title || file.name,
-                                category: 'ncert',
-                              })
-                            } else {
-                              window.open(directProxyUrl, '_blank', 'noopener,noreferrer')
-                              onTrackDownload?.({
-                                id: `r2_${file.key}`,
-                                type: 'ncert',
-                                title: file.title || file.name,
-                                category: 'ncert',
-                                url: directProxyUrl,
-                              })
-                            }
-                          }}
+                {/* Right: Chevron Arrow */}
+                <div style={{ flexShrink: 0, paddingLeft: 12 }}>
+                  <svg
+                    width="26"
+                    height="26"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+              </div>
+            )
+          })}
+
+          {/* Files List (When inside a folder that has PDFs) */}
+          {treeData.files.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+              {treeData.files.map((file) => {
+                const directProxyUrl = `${WORKER_API_URL}${file.proxyUrl}`
+                return (
+                  <div
+                    key={file.key}
+                    style={{
+                      background: 'var(--card-bg, #ffffff)',
+                      borderRadius: 14,
+                      padding: '14px 18px',
+                      border: '1px solid var(--border, #e2e8f0)',
+                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 12,
+                    }}
+                  >
+                    {/* Left: PDF Icon + Title & File Size */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: '1 1 280px', minWidth: 0 }}>
+                      <span
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 10,
+                          background: '#fef2f2',
+                          color: '#dc2626',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Icon name="file" size={20} />
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <div
                           style={{
-                            padding: '6px 14px',
-                            borderRadius: 6,
-                            fontSize: '0.84rem',
                             fontWeight: 600,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            cursor: 'pointer',
+                            fontSize: '1rem',
+                            color: 'var(--text-primary, #0f172a)',
+                            lineHeight: 1.35,
+                            wordBreak: 'break-word',
                           }}
                         >
-                          <Icon name="book" size={14} />
-                          <span>पढ़ें / देखें</span>
-                        </button>
+                          {file.title || file.name}
+                        </div>
+                        {file.size > 0 && (
+                          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted, #64748b)', marginTop: 2 }}>
+                            {formatBytes(file.size)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-                        <a
-                          href={directProxyUrl}
-                          download={file.name}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => {
+                    {/* Right: Actions */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={(e) => {
+                          if (onOpenFile) {
+                            onOpenFile(e, {
+                              href: directProxyUrl,
+                              id: `r2_${file.key}`,
+                              type: 'ncert',
+                              title: file.title || file.name,
+                              category: 'ncert',
+                            })
+                          } else {
+                            window.open(directProxyUrl, '_blank', 'noopener,noreferrer')
                             onTrackDownload?.({
                               id: `r2_${file.key}`,
                               type: 'ncert',
@@ -505,44 +427,63 @@ export default function NcertExplorer({
                               category: 'ncert',
                               url: directProxyUrl,
                             })
-                          }}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: 6,
-                            border: '1px solid var(--border)',
-                            background: 'var(--card-bg, #fff)',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.84rem',
-                            fontWeight: 600,
-                            textDecoration: 'none',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                          }}
-                        >
-                          <Icon name="download" size={14} />
-                          <span>डाउनलोड</span>
-                        </a>
-                      </div>
+                          }
+                        }}
+                        style={{
+                          padding: '7px 16px',
+                          borderRadius: 8,
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        पढ़ें
+                      </button>
+
+                      <a
+                        href={directProxyUrl}
+                        download={file.name}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => {
+                          onTrackDownload?.({
+                            id: `r2_${file.key}`,
+                            type: 'ncert',
+                            title: file.title || file.name,
+                            category: 'ncert',
+                            url: directProxyUrl,
+                          })
+                        }}
+                        style={{
+                          padding: '7px 14px',
+                          borderRadius: 8,
+                          border: '1px solid var(--border, #cbd5e1)',
+                          background: 'var(--input-bg, #f8fafc)',
+                          color: 'var(--text-primary, #1e293b)',
+                          fontSize: '0.86rem',
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        डाउनलोड
+                      </a>
                     </div>
-                  )
-                })}
-              </div>
+                  </div>
+                )
+              })}
             </div>
           )}
 
-          {/* Empty folder message */}
-          {filteredFolders.length === 0 && filteredFiles.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)' }}>
-              <p style={{ margin: 0, fontSize: '0.96rem' }}>
-                {searchQuery
-                  ? `&quot;${searchQuery}&quot; से मेल खाता कोई फ़ोल्डर या PDF नहीं मिला।`
-                  : 'इस फ़ोल्डर में कोई सामग्री उपलब्ध नहीं है।'}
+          {/* Empty Folder Message */}
+          {treeData.folders.length === 0 && treeData.files.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '50px 0', color: 'var(--text-muted)' }}>
+              <p style={{ margin: 0, fontSize: '1rem', fontWeight: 500 }}>
+                इस फ़ोल्डर में कोई सामग्री उपलब्ध नहीं है।
               </p>
             </div>
           )}
-        </>
+        </div>
       )}
-    </section>
+    </div>
   )
 }

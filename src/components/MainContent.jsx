@@ -659,31 +659,7 @@ function SectionPage({
         </section>
       ) : null}
 
-      {view === 'ncert' && publishedNcert.length > 0 ? (
-        <section className="quiz-chips-container" aria-label="NCERT Class Filters">
-          <div className="quiz-chips-bar">
-            {ncertClassChips.map((chip) => {
-              const active = selectedNcertClass === chip.id
-              return (
-                <button
-                  key={chip.id}
-                  type="button"
-                  className={`quiz-chip-btn quiz-chip--navy ${active ? 'is-active' : ''}`}
-                  onClick={() => setSelectedNcertClass(chip.id)}
-                  aria-pressed={active}
-                >
-                  <span>
-                    {chip.label}
-                    {chip.count > 0 ? ` (${chip.count})` : ''}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </section>
-      ) : null}
-
-      {cmsPage ? (
+      {cmsPage && view !== 'ncert' ? (
         <section className="panel article-panel" style={{ marginBottom: 18 }}>
           <div
             className="article-prose"
@@ -698,82 +674,10 @@ function SectionPage({
       ) : null}
 
       {view === 'ncert' ? (
-        <>
-          <NcertExplorer
-            t={t}
-            onOpenFile={onOpenFile}
-            onTrackDownload={onTrackDownload}
-          />
-
-          {publishedNcert.length > 0 ? (
-            <section className="panel" style={{ marginTop: 20 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: 12,
-                  marginBottom: 16,
-                }}
-              >
-                <div>
-                  <h3 style={{ margin: 0 }}>अतिरिक्त NCERT संग्रह ({filteredNcert.length})</h3>
-                  <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                    कैटलॉग में मैनुअल रूप से जोड़े गए NCERT संदर्भ
-                  </span>
-                </div>
-              </div>
-
-              <div className="list">
-                {filteredNcert.map((item) => {
-                  const href = item.fileUrl || item.url || item.pdfUrl || ''
-                  return (
-                    <a
-                      key={`${item._collection || 'ncert'}-${item.id}`}
-                      href={href || '#'}
-                      target={href ? '_blank' : undefined}
-                      rel={href ? 'noopener noreferrer' : undefined}
-                      className="row"
-                      style={{ textDecoration: 'none' }}
-                      onClick={(e) => {
-                        if (onOpenFile) {
-                          onOpenFile(e, {
-                            href,
-                            id: item.id,
-                            type: 'ncert',
-                            title: item.title,
-                            category: 'ncert',
-                          })
-                        } else if (href) {
-                          onTrackDownload?.({
-                            id: item.id,
-                            type: 'ncert',
-                            title: item.title,
-                            category: 'ncert',
-                            url: href,
-                          })
-                        }
-                      }}
-                    >
-                      <span className="tone tone-red">
-                        <Icon name="book" size={18} />
-                      </span>
-                      <span className="row-copy">
-                        <span className="row-title">{item.title}</span>
-                        <span className="row-meta">
-                          {item.classLevel || item.class || 'NCERT'} · {item.subject || 'Subject'}
-                          {item.book ? ` · ${item.book}` : ''}
-                          {item.chapter ? ` · ${item.chapter}` : ''}
-                        </span>
-                      </span>
-                    </a>
-                  )
-                })}
-              </div>
-            </section>
-          ) : null}
-        </>
+        <NcertExplorer
+          onOpenFile={onOpenFile}
+          onTrackDownload={onTrackDownload}
+        />
       ) : null}
       {view === 'pyq' && publishedPyq.length > 0 ? (
         <section className="panel">
