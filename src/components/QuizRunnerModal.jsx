@@ -10,6 +10,7 @@ import {
   Check,
   Clock,
   Eye,
+  EyeOff,
   FileText,
   Flag,
   HelpCircle,
@@ -461,21 +462,21 @@ export default function QuizRunnerModal({
   const [isTranslating, setIsTranslating] = useState(false)
   const [translationProgress, setTranslationProgress] = useState({ current: 0, total: 0 })
 
-  // Landscape Mobile Mode state
+  // Mobile Fullscreen & Floating Ball state (Supports both Portrait & Landscape)
+  const [isMobileScreen, setIsMobileScreen] = useState(false)
   const [isLandscapeMobile, setIsLandscapeMobile] = useState(false)
-  const [landscapeBarsVisible, setLandscapeBarsVisible] = useState(false)
+  const [barsHidden, setBarsHidden] = useState(false)
 
   useEffect(() => {
     function handleOrientationCheck() {
-      const isLandscape = window.innerWidth > window.innerHeight
-      // Detect phones in landscape (height <= 580px or mobile widths <= 1024 with small height)
-      const isMobileHeight =
-        window.innerHeight <= 580 || (window.innerWidth <= 1024 && window.innerHeight <= 600)
-      const active = isLandscape && isMobileHeight
-      setIsLandscapeMobile(active)
-      if (!active) {
-        setLandscapeBarsVisible(false)
-      }
+      const width = window.innerWidth
+      const height = window.innerHeight
+      const isLandscape = width > height
+      const isSmallLandscape = isLandscape && (height <= 600 || (width <= 1024 && height <= 640))
+      const isMobile = width <= 900 || height <= 640 || ('ontouchstart' in window && width <= 1024)
+
+      setIsMobileScreen(isMobile)
+      setIsLandscapeMobile(isSmallLandscape)
     }
 
     handleOrientationCheck()
@@ -1163,7 +1164,7 @@ export default function QuizRunnerModal({
     return (
       <div
       className={`modern-quiz-player theme-${quizTheme} ${isLandscapeMobile ? 'is-landscape-mobile' : ''} ${
-        isLandscapeMobile && !landscapeBarsVisible ? 'bars-hidden' : ''
+        barsHidden ? 'bars-hidden' : ''
       }`}
       data-theme={quizTheme}
       role="dialog"
@@ -1363,7 +1364,7 @@ export default function QuizRunnerModal({
     return (
       <div
       className={`modern-quiz-player theme-${quizTheme} ${isLandscapeMobile ? 'is-landscape-mobile' : ''} ${
-        isLandscapeMobile && !landscapeBarsVisible ? 'bars-hidden' : ''
+        barsHidden ? 'bars-hidden' : ''
       }`}
       data-theme={quizTheme}
       role="dialog"
@@ -1653,7 +1654,7 @@ export default function QuizRunnerModal({
     return (
       <div
       className={`modern-quiz-player theme-${quizTheme} ${isLandscapeMobile ? 'is-landscape-mobile' : ''} ${
-        isLandscapeMobile && !landscapeBarsVisible ? 'bars-hidden' : ''
+        barsHidden ? 'bars-hidden' : ''
       }`}
       data-theme={quizTheme}
       role="dialog"
@@ -1821,6 +1822,22 @@ export default function QuizRunnerModal({
             })}
           </div>
         </div>
+
+        {/* Semi-visible Floating Ball on Side in Solutions screen */}
+        {isMobileScreen ? (
+          <button
+            type="button"
+            className={`mqp-floating-toggle-ball ${barsHidden ? 'is-focus-mode' : ''}`}
+            onClick={() => setBarsHidden((prev) => !prev)}
+            title={barsHidden ? 'नेविगेशन बार दिखाएं (Show Bars)' : 'फुल स्क्रीन - बार छिपाएं (Hide Bars)'}
+            aria-label={barsHidden ? 'Show quiz navigation bars' : 'Hide quiz navigation bars and enter full screen'}
+          >
+            <div className="mqp-ball-inner">
+              {barsHidden ? <Eye size={19} /> : <EyeOff size={19} />}
+            </div>
+            <span className="mqp-ball-pulse-ring" />
+          </button>
+        ) : null}
       </div>
     )
   }
@@ -1834,7 +1851,7 @@ export default function QuizRunnerModal({
   return (
     <div
       className={`modern-quiz-player theme-${quizTheme} ${isLandscapeMobile ? 'is-landscape-mobile' : ''} ${
-        isLandscapeMobile && !landscapeBarsVisible ? 'bars-hidden' : ''
+        barsHidden ? 'bars-hidden' : ''
       }`}
       data-theme={quizTheme}
       role="dialog"
@@ -2511,17 +2528,17 @@ export default function QuizRunnerModal({
           </div>
         </div>
       ) : null}
-      {/* Semi-visible Floating Ball in Landscape Mobile */}
-      {isLandscapeMobile ? (
+      {/* Semi-visible Floating Ball on Side (Works in both Portrait and Landscape on Mobile) */}
+      {isMobileScreen ? (
         <button
           type="button"
-          className={`mqp-landscape-toggle-ball ${landscapeBarsVisible ? 'is-active' : ''}`}
-          onClick={() => setLandscapeBarsVisible((prev) => !prev)}
-          title={landscapeBarsVisible ? 'नेविगेशन बार छिपाएं (Hide Bars)' : 'नेविगेशन बार दिखाएं (Show Bars)'}
-          aria-label={landscapeBarsVisible ? 'Hide quiz navigation bars' : 'Show quiz navigation bars'}
+          className={`mqp-floating-toggle-ball ${barsHidden ? 'is-focus-mode' : ''}`}
+          onClick={() => setBarsHidden((prev) => !prev)}
+          title={barsHidden ? 'नेविगेशन बार दिखाएं (Show Bars)' : 'फुल स्क्रीन - बार छिपाएं (Hide Bars)'}
+          aria-label={barsHidden ? 'Show quiz navigation bars' : 'Hide quiz navigation bars and enter full screen'}
         >
           <div className="mqp-ball-inner">
-            {landscapeBarsVisible ? <X size={18} /> : <Menu size={18} />}
+            {barsHidden ? <Eye size={19} /> : <EyeOff size={19} />}
           </div>
           <span className="mqp-ball-pulse-ring" />
         </button>

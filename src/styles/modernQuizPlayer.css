@@ -2679,20 +2679,21 @@ body.quiz-active[data-theme="dark"] {
 }
 
 /* ==========================================================================
-   LANDSCAPE MOBILE FULLSCREEN & SEMI-VISIBLE FLOATING BALL
+   MOBILE FULLSCREEN FOCUS MODE & SEMI-VISIBLE FLOATING BALL (PORTRAIT & LANDSCAPE)
    ========================================================================== */
 
 /* Semi-visible Floating Ball on the side */
-.mqp-landscape-toggle-ball {
+.mqp-landscape-toggle-ball,
+.mqp-floating-toggle-ball {
   position: fixed;
-  right: 12px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   width: 44px;
   height: 44px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, rgba(14, 165, 233, 0.65), rgba(2, 132, 199, 0.8));
-  border: 2px solid rgba(255, 255, 255, 0.65);
+  border: 2px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28), inset 0 2px 4px rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -2702,7 +2703,7 @@ body.quiz-active[data-theme="dark"] {
   justify-content: center;
   cursor: pointer;
   z-index: 999999;
-  opacity: 0.58;
+  opacity: 0.54;
   transition: opacity 0.25s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.2s ease;
   user-select: none;
   touch-action: manipulation;
@@ -2710,32 +2711,35 @@ body.quiz-active[data-theme="dark"] {
 }
 
 .mqp-landscape-toggle-ball:hover,
-.mqp-landscape-toggle-ball:active {
-  opacity: 0.96;
+.mqp-landscape-toggle-ball:active,
+.mqp-floating-toggle-ball:hover,
+.mqp-floating-toggle-ball:active {
+  opacity: 0.98;
   transform: translateY(-50%) scale(1.08);
   box-shadow: 0 6px 24px rgba(2, 132, 199, 0.55), 0 0 16px rgba(56, 189, 248, 0.6);
 }
 
-.mqp-landscape-toggle-ball.is-active {
-  opacity: 0.92;
-  background: radial-gradient(circle at 35% 35%, rgba(239, 68, 68, 0.8), rgba(185, 28, 28, 0.9));
-  border-color: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.45);
+.mqp-landscape-toggle-ball.is-focus-mode,
+.mqp-floating-toggle-ball.is-focus-mode {
+  opacity: 0.84;
+  background: radial-gradient(circle at 35% 35%, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.95));
+  border-color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 22px rgba(16, 185, 129, 0.5);
 }
 
-:root[data-theme="dark"] .mqp-landscape-toggle-ball,
-.modern-quiz-player[data-theme="dark"] .mqp-landscape-toggle-ball,
-.modern-quiz-player.theme-dark .mqp-landscape-toggle-ball {
+:root[data-theme="dark"] .mqp-floating-toggle-ball,
+.modern-quiz-player[data-theme="dark"] .mqp-floating-toggle-ball,
+.modern-quiz-player.theme-dark .mqp-floating-toggle-ball {
   background: radial-gradient(circle at 35% 35%, rgba(56, 189, 248, 0.6), rgba(15, 23, 42, 0.85));
   border: 2px solid rgba(255, 255, 255, 0.45);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
-:root[data-theme="dark"] .mqp-landscape-toggle-ball.is-active,
-.modern-quiz-player[data-theme="dark"] .mqp-landscape-toggle-ball.is-active,
-.modern-quiz-player.theme-dark .mqp-landscape-toggle-ball.is-active {
-  background: radial-gradient(circle at 35% 35%, rgba(248, 113, 113, 0.8), rgba(153, 27, 27, 0.95));
-  box-shadow: 0 4px 22px rgba(248, 113, 113, 0.5);
+:root[data-theme="dark"] .mqp-floating-toggle-ball.is-focus-mode,
+.modern-quiz-player[data-theme="dark"] .mqp-floating-toggle-ball.is-focus-mode,
+.modern-quiz-player.theme-dark .mqp-floating-toggle-ball.is-focus-mode {
+  background: radial-gradient(circle at 35% 35%, rgba(52, 211, 153, 0.8), rgba(6, 95, 70, 0.95));
+  box-shadow: 0 4px 22px rgba(52, 211, 153, 0.5);
 }
 
 .mqp-ball-inner {
@@ -2769,23 +2773,25 @@ body.quiz-active[data-theme="dark"] {
   }
 }
 
-/* 1. When in Landscape Mobile and Bars are Hidden (Default Full-Screen Question View) */
-.modern-quiz-player.is-landscape-mobile.bars-hidden .mqp-topbar,
-.modern-quiz-player.is-landscape-mobile.bars-hidden .mqp-fullwidth-progress-strip,
-.modern-quiz-player.is-landscape-mobile.bars-hidden .mqp-bottombar {
+/* 1. When Bars are Hidden (Full-Screen Focus Mode in both Portrait & Landscape) */
+.modern-quiz-player.bars-hidden .mqp-topbar,
+.modern-quiz-player.bars-hidden .mqp-fullwidth-progress-strip,
+.modern-quiz-player.bars-hidden .mqp-bottombar,
+.modern-quiz-player.bars-hidden .mqp-solutions-header {
   display: none !important;
 }
 
-.modern-quiz-player.is-landscape-mobile.bars-hidden .mqp-scroll-area {
+.modern-quiz-player.bars-hidden .mqp-scroll-area,
+.modern-quiz-player.bars-hidden .mqp-solutions-body {
   padding-top: 10px !important;
-  padding-bottom: 12px !important;
+  padding-bottom: 24px !important;
   padding-left: 14px !important;
-  padding-right: 64px !important;
+  padding-right: 58px !important;
   height: 100vh !important;
   max-height: 100vh !important;
 }
 
-/* 2. When Bars are Toggled Visible in Landscape Mobile (Overlaid gently) */
+/* 2. When Bars are Visible in Landscape Mobile (Overlaid gently) */
 .modern-quiz-player.is-landscape-mobile:not(.bars-hidden) .mqp-topbar {
   position: fixed !important;
   top: 0 !important;
