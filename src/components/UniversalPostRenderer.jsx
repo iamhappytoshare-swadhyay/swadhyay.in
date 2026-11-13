@@ -7,12 +7,25 @@ const BASE_POST_CSS = `
 *, *::before, *::after {
   box-sizing: border-box;
 }
-html, body {
+html {
   margin: 0;
   padding: 0;
   width: 100%;
   max-width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
   overflow-x: hidden;
+  overflow-y: visible;
+}
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden;
+  overflow-y: visible;
   font-family: "Inter", "Noto Sans Devanagari", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.72;
@@ -263,6 +276,9 @@ function buildAutoResizeScript(frameId) {
 <script>
 (function() {
   var FRAME_ID = ${JSON.stringify(frameId)};
+  var lastSentHeight = 0;
+  var lastSentWidth = window.innerWidth;
+
   function wrapTables() {
     var tables = document.querySelectorAll('table');
     for (var i = 0; i < tables.length; i++) {
@@ -274,43 +290,95 @@ function buildAutoResizeScript(frameId) {
       wrapper.appendChild(tbl);
     }
   }
-  function postHeight() {
+
+  function getContentHeight() {
     var root = document.getElementById('sw-post-root');
-    var h = Math.max(
-      root ? root.scrollHeight : 0,
-      document.body ? document.body.scrollHeight : 0,
-      document.documentElement ? document.documentElement.scrollHeight : 0
-    );
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'swadhyay-post-height', frameId: FRAME_ID, height: h }, '*');
+    var container = root || document.body;
+    if (!container) return 0;
+
+    var maxBottom = 0;
+    var children = container.children;
+    for (var i = 0; i < children.length; i++) {
+      var el = children[i];
+      var tag = el.tagName ? el.tagName.toLowerCase() : '';
+      if (tag === 'script' || tag === 'style' || tag === 'link') continue;
+      var bottom = el.offsetTop + el.offsetHeight;
+      if (bottom > maxBottom) maxBottom = bottom;
+    }
+
+    var style = window.getComputedStyle(container);
+    var padBottom = parseFloat(style.paddingBottom) || 0;
+    var total = maxBottom + padBottom;
+
+    if (total <= 0) {
+      total = root ? root.scrollHeight : (document.body ? document.body.offsetHeight : 0);
+    }
+    return Math.ceil(total);
+  }
+
+  function postHeight() {
+    var h = getContentHeight();
+    if (h <= 0) return;
+    if (Math.abs(h - lastSentHeight) > 4) {
+      lastSentHeight = h;
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'swadhyay-post-height', frameId: FRAME_ID, height: h }, '*');
+      }
     }
   }
+
   function init() {
     wrapTables();
     postHeight();
+
     if (typeof ResizeObserver !== 'undefined') {
-      var ro = new ResizeObserver(function() { postHeight(); });
-      if (document.body) ro.observe(document.body);
+      var ro = new ResizeObserver(function() {
+        postHeight();
+      });
       var root = document.getElementById('sw-post-root');
-      if (root) ro.observe(root);
+      if (root) {
+        ro.observe(root);
+      } else if (document.body) {
+        var first = document.body.firstElementChild;
+        if (first && first.tagName.toLowerCase() !== 'script' && first.tagName.toLowerCase() !== 'style') {
+          ro.observe(first);
+        } else {
+          ro.observe(document.body);
+        }
+      }
     }
+
     if (typeof MutationObserver !== 'undefined' && document.body) {
       var mo = new MutationObserver(function() {
         wrapTables();
         postHeight();
       });
-      mo.observe(document.body, { childList: true, subtree: true, attributes: true });
+      mo.observe(document.body, { childList: true, subtree: true });
     }
-    setTimeout(postHeight, 120);
-    setTimeout(postHeight, 450);
+
+    setTimeout(postHeight, 150);
+    setTimeout(postHeight, 500);
+    setTimeout(postHeight, 1200);
   }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
-  window.addEventListener('load', postHeight);
-  window.addEventListener('resize', postHeight);
+
+  window.addEventListener('load', function() {
+    wrapTables();
+    postHeight();
+  });
+
+  window.addEventListener('resize', function() {
+    var currentWidth = window.innerWidth;
+    if (Math.abs(currentWidth - lastSentWidth) > 6) {
+      lastSentWidth = currentWidth;
+      postHeight();
+    }
+  });
 })();
 </script>`
 }
@@ -435,7 +503,11 @@ export default function UniversalPostRenderer({
       if (!data || data.type !== 'swadhyay-post-height' || data.frameId !== frameId) return
       const nextHeight = Number(data.height)
       if (Number.isFinite(nextHeight) && nextHeight > 0) {
-        setHeight(Math.max(minHeight, Math.ceil(nextHeight) + 8))
+        setHeight((prev) => {
+          const target = Math.max(minHeight, Math.ceil(nextHeight) + 4)
+          if (Math.abs(prev - target) <= 4) return prev
+          return target
+        })
       }
     }
     window.addEventListener('message', handleMessage)
